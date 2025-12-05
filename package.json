@@ -1,0 +1,36 @@
+{
+  "name": "web7-9",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tanstack/react-form": "^1.27.1",
+    "@tanstack/react-query": "^5.90.12",
+    "@tanstack/react-router": "^1.139.14",
+    "axios": "^1.13.2",
+    "dayjs": "^1.11.19",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "ts-pattern": "^5.9.0",
+    "zustand": "^5.0.9"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.8",
+    "@tailwindcss/vite": "^4.1.17",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6"
+  }
+}
