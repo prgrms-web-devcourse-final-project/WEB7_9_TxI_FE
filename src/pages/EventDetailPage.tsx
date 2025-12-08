@@ -237,8 +237,8 @@ export default function EventDetailPage() {
                 </div>
               </div>
 
-              <Button className="w-full mb-3" size="lg">
-                사전 등록하기
+              <Button className="w-full mb-3" size="lg" asChild>
+                <Link to={`/events/${id}/register`}>사전 등록하기</Link>
               </Button>
               <Button variant="outline" className="w-full">
                 알림 받기
