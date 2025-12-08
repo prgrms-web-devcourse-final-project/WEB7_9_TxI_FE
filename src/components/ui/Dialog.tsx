@@ -28,11 +28,12 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/60"
         onClick={() => onOpenChange(false)}
+        aria-hidden="true"
       />
       {/* Dialog content */}
       {children}
@@ -43,8 +44,10 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
 export function DialogContent({ children, className = "" }: DialogContentProps) {
   return (
     <div
-      className={`relative z-50 w-full max-w-md bg-white rounded-lg shadow-lg p-6 ${className}`}
+      className={`relative z-50 w-full max-w-md bg-white rounded-lg shadow-xl p-6 mx-auto ${className}`}
       onClick={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-modal="true"
     >
       {children}
     </div>

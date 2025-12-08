@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Ticket } from "lucide-react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LoginModal } from "@/components/LoginModal";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
 
-export function Header() {
+interface HeaderProps {
+  onLoginClick: () => void;
+}
+
+export function Header({ onLoginClick }: HeaderProps) {
   const router = useRouterState();
   const navigate = useNavigate();
   const currentPath = router.location.pathname;
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -91,7 +93,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsLoginModalOpen(true)}
+                onClick={onLoginClick}
               >
                 로그인
               </Button>
@@ -99,7 +101,6 @@ export function Header() {
           )}
         </div>
       </div>
-      <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
     </header>
   );
 }
