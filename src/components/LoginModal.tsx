@@ -73,7 +73,8 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
             validators={{
               onChange: ({ value }) => {
                 const result = loginFormSchema.shape.email.safeParse(value)
-                return result.success ? undefined : result.error.message
+                if (result.success) return undefined
+                return result.error.issues[0]?.message
               },
             }}
           >
@@ -96,7 +97,8 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
             validators={{
               onChange: ({ value }) => {
                 const result = loginFormSchema.shape.password.safeParse(value)
-                return result.success ? undefined : result.error.message
+                if (result.success) return undefined
+                return result.error.issues[0]?.message
               },
             }}
           >
