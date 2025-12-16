@@ -1,23 +1,36 @@
-import { type ReactNode, useState } from "react";
-import { Header } from "./Header";
-import { Footer } from "./Footer";
-import { Toaster } from "sonner";
-import { LoginModal } from "@/components/LoginModal";
+import { PageErrorFallback } from '@/components/common/ErrorFallback'
+import { LoadingFallback } from '@/components/common/LoadingFallback'
+import { LoginModal } from '@/components/LoginModal'
+import { SignupModal } from '@/components/SignupModal'
+import { type ReactNode, Suspense, useState } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
+import { Toaster } from 'sonner'
+import { Footer } from './Footer'
+import { Header } from './Header'
 
 interface LayoutProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function Layout({ children }: LayoutProps) {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header onLoginClick={() => setIsLoginModalOpen(true)} />
-      <main className="flex-1">{children}</main>
+      <Header
+        onLoginClick={() => setIsLoginModalOpen(true)}
+        onSignupClick={() => setIsSignupModalOpen(true)}
+      />
+      <main className="flex-1">
+        <ErrorBoundary FallbackComponent={PageErrorFallback}>
+          <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
+        </ErrorBoundary>
+      </main>
       <Footer />
       <Toaster position="top-right" richColors />
       <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
+      <SignupModal open={isSignupModalOpen} onOpenChange={setIsSignupModalOpen} />
     </div>
-  );
+  )
 }

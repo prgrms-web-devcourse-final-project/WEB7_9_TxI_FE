@@ -1,61 +1,57 @@
-import type { FormEvent } from "react";
-import { useState } from "react";
-import { Link, useParams, useNavigate } from "@tanstack/react-router";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import { Checkbox } from "@/components/ui/Checkbox";
-import { Ticket, CheckCircle2, Shield, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
-import { addNotification } from "@/components/NotificationDropdown";
+import { addNotification } from '@/components/NotificationDropdown'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { Checkbox } from '@/components/ui/Checkbox'
+import { Input } from '@/components/ui/Input'
+import { Label } from '@/components/ui/Label'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { ArrowLeft, CheckCircle2, Shield, Ticket } from 'lucide-react'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 export default function PreRegistrationPage() {
-  const navigate = useNavigate();
-  const { id } = useParams({ from: "/events/$id/register" });
+  const navigate = useNavigate()
+  const { id } = useParams({ from: '/events/$id/register' })
 
   const [formData, setFormData] = useState({
-    name: "",
-    password: "",
-    birthdate: "",
+    name: '',
+    password: '',
+    birthdate: '',
     agreeTerms: false,
     agreePrivacy: false,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (!formData.password || formData.password.length < 6) {
-      toast.error("비밀번호는 6자리 이상이어야 합니다.");
-      return;
+      toast.error('비밀번호는 6자리 이상이어야 합니다.')
+      return
     }
 
     if (!formData.agreeTerms || !formData.agreePrivacy) {
-      toast.error("모든 약관에 동의해주세요.");
-      return;
+      toast.error('모든 약관에 동의해주세요.')
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
-    // Simulate API call
     setTimeout(() => {
-      localStorage.setItem(`preRegistered_${id}`, "true");
+      localStorage.setItem(`preRegistered_${id}`, 'true')
 
       addNotification({
-        type: "registration",
-        title: "사전등록 완료",
-        message:
-          "사전등록이 완료되었습니다. 티켓팅 시작일에 알림을 보내드리겠습니다.",
-        timestamp: new Date().toLocaleString("ko-KR"),
-      });
+        type: 'registration',
+        title: '사전등록 완료',
+        message: '사전등록이 완료되었습니다. 티켓팅 시작일에 알림을 보내드리겠습니다.',
+        timestamp: new Date().toLocaleString('ko-KR'),
+      })
 
-      toast.success(
-        "사전등록 완료! 티켓팅 시작일에 대기열에 입장하실 수 있습니다."
-      );
-      navigate({ to: `/events/${id}` });
-    }, 1500);
-  };
+      toast.success('사전등록 완료! 티켓팅 시작일에 대기열에 입장하실 수 있습니다.')
+      navigate({ to: `/events/${id}` })
+    }, 1500)
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -73,7 +69,8 @@ export default function PreRegistrationPage() {
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <Link
-          to={`/events/${id}`}
+          to="/events/$id"
+          params={{ id }}
           className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -85,9 +82,7 @@ export default function PreRegistrationPage() {
             <Shield className="w-8 h-8 text-blue-600" />
           </div>
           <h1 className="text-3xl font-bold mb-2">사전 등록</h1>
-          <p className="text-gray-600">
-            본인 인증 후 공정한 랜덤 큐에 참여하세요
-          </p>
+          <p className="text-gray-600">본인 인증 후 공정한 랜덤 큐에 참여하세요</p>
         </div>
 
         <Card className="p-6 mb-6 border-blue-600/30 bg-blue-600/5">
@@ -121,9 +116,7 @@ export default function PreRegistrationPage() {
                 placeholder="홍길동"
                 required
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
 
@@ -135,13 +128,9 @@ export default function PreRegistrationPage() {
                 placeholder="비밀번호 (6자리 이상)"
                 required
                 value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
-              <p className="text-xs text-gray-600">
-                본인 인증을 위해 사용됩니다
-              </p>
+              <p className="text-xs text-gray-600">본인 인증을 위해 사용됩니다</p>
             </div>
 
             <div className="space-y-2">
@@ -151,9 +140,7 @@ export default function PreRegistrationPage() {
                 type="date"
                 required
                 value={formData.birthdate}
-                onChange={(e) =>
-                  setFormData({ ...formData, birthdate: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
               />
             </div>
 
@@ -162,14 +149,9 @@ export default function PreRegistrationPage() {
                 <Checkbox
                   id="terms"
                   checked={formData.agreeTerms}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, agreeTerms: checked })
-                  }
+                  onCheckedChange={(checked) => setFormData({ ...formData, agreeTerms: checked })}
                 />
-                <Label
-                  htmlFor="terms"
-                  className="text-sm cursor-pointer leading-relaxed"
-                >
+                <Label htmlFor="terms" className="text-sm cursor-pointer leading-relaxed">
                   이용약관에 동의합니다 (필수)
                 </Label>
               </div>
@@ -177,36 +159,24 @@ export default function PreRegistrationPage() {
                 <Checkbox
                   id="privacy"
                   checked={formData.agreePrivacy}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, agreePrivacy: checked })
-                  }
+                  onCheckedChange={(checked) => setFormData({ ...formData, agreePrivacy: checked })}
                 />
-                <Label
-                  htmlFor="privacy"
-                  className="text-sm cursor-pointer leading-relaxed"
-                >
+                <Label htmlFor="privacy" className="text-sm cursor-pointer leading-relaxed">
                   개인정보 수집 및 이용에 동의합니다 (필수)
                 </Label>
               </div>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "등록 중..." : "사전 등록 완료하기"}
+            <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? '등록 중...' : '사전 등록 완료하기'}
             </Button>
           </form>
         </Card>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <p>
-            1인 1계정만 등록 가능하며, 중복 등록 시 자동으로 차단됩니다.
-          </p>
+          <p>1인 1계정만 등록 가능하며, 중복 등록 시 자동으로 차단됩니다.</p>
         </div>
       </main>
     </div>
-  );
+  )
 }

@@ -1,38 +1,48 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Ticket } from "lucide-react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { useAuthStore } from "@/stores/authStore";
+import { authApi } from "@/api/auth";
+import { toast } from "sonner";
 
 interface HeaderProps {
   onLoginClick: () => void;
+  onSignupClick: () => void;
 }
 
-export function Header({ onLoginClick }: HeaderProps) {
+export function Header({ onLoginClick, onSignupClick }: HeaderProps) {
   const router = useRouterState();
   const navigate = useNavigate();
   const currentPath = router.location.pathname;
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated, clearUser } = useAuthStore();
 
-  useEffect(() => {
-    const user = localStorage.getItem("user");
-    setIsLoggedIn(!!user);
-
-    // Listen for storage changes
-    const handleStorageChange = () => {
-      const user = localStorage.getItem("user");
-      setIsLoggedIn(!!user);
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  // 로그아웃 mutation
+  const logoutMutation = useMutation({
+    mutationFn: authApi.logout,
+    onSuccess: () => {
+      clearUser();
+      toast.success("로그아웃되었습니다.");
+      navigate({ to: "/" });
+    },
+    onError: (error: any) => {
+      console.error("Logout failed:", error);
+      // 로그아웃 실패해도 클라이언트 상태는 클리어
+      clearUser();
+      navigate({ to: "/" });
+    },
+  });
 
   const isActive = (path: string) => {
     if (path === "/") {
       return currentPath === "/";
     }
     return currentPath.startsWith(path);
+  };
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
 
   return (
@@ -67,8 +77,8 @@ export function Header({ onLoginClick }: HeaderProps) {
           </Link>
         </nav>
         <div className="flex items-center gap-3">
-          {isLoggedIn && <NotificationDropdown />}
-          {isLoggedIn ? (
+          {isAuthenticated && <NotificationDropdown />}
+          {isAuthenticated ? (
             <>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/my-tickets">내 티켓</Link>
@@ -79,22 +89,18 @@ export function Header({ onLoginClick }: HeaderProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  localStorage.removeItem("user");
-                  setIsLoggedIn(false);
-                  navigate({ to: "/" });
-                }}
+                onClick={handleLogout}
+                disabled={logoutMutation.isPending}
               >
-                로그아웃
+                {logoutMutation.isPending ? "로그아웃 중..." : "로그아웃"}
               </Button>
             </>
           ) : (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onLoginClick}
-              >
+              <Button variant="ghost" size="sm" onClick={onSignupClick}>
+                회원가입
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onLoginClick}>
                 로그인
               </Button>
             </>

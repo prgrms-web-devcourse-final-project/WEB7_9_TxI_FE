@@ -58,7 +58,7 @@ export default function MyTicketsPage() {
                     </div>
                     <div className="flex gap-3">
                       <Button className="flex-1" asChild>
-                        <Link to={`/events/${ticket.id}`}>
+                        <Link to="/events/$id" params={{ id: String(ticket.id) }}>
                           티켓 보기
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Link>

@@ -1,33 +1,93 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import { User, Mail, Calendar } from "lucide-react";
+import { userApi } from '@/api/user'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
+import { Label } from '@/components/ui/Label'
+import { useAuthStore } from '@/stores/authStore'
+import { updateUserFormSchema } from '@/utils/validation'
+import { useForm } from '@tanstack/react-form'
+import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
+import dayjs from 'dayjs'
+import { Calendar, Mail, User } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 export default function MyPage() {
-  const [user, setUser] = useState<{
-    email: string;
-    name: string;
-    id: string;
-  } | null>(null);
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { clearUser, updateUser } = useAuthStore()
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+  const [isEditing, setIsEditing] = useState(false)
+
+  const { data: userData } = useSuspenseQuery({
+    queryKey: ['user', 'me'],
+    queryFn: userApi.getMe,
+  })
+
+  const defaultFormValues = useMemo(
+    () => ({
+      name: userData.name,
+      nickname: userData.nickname,
+      birthDate: userData.birthDate,
+    }),
+    [userData],
+  )
+
+  // 내 정보 수정
+  const updateMutation = useMutation({
+    mutationFn: userApi.updateMe,
+    onSuccess: (data) => {
+      updateUser(data)
+      queryClient.invalidateQueries({ queryKey: ['user', 'me'] })
+      toast.success('정보가 수정되었습니다.')
+      setIsEditing(false)
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || '정보 수정에 실패했습니다.'
+      toast.error(message)
+    },
+  })
+
+  const form = useForm({
+    defaultValues: defaultFormValues,
+    onSubmit: async ({ value }) => {
+      updateMutation.mutate(value)
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: userApi.deleteMe,
+    onSuccess: () => {
+      toast.success('회원 탈퇴가 완료되었습니다.')
+      clearUser()
+      navigate({ to: '/' })
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || '회원 탈퇴에 실패했습니다.'
+      toast.error(message)
+    },
+  })
+
+  const enterEditMode = () => {
+    form.setFieldValue('name', userData.name)
+    form.setFieldValue('nickname', userData.nickname)
+    form.setFieldValue('birthDate', userData.birthDate)
+    setIsEditing(true)
+  }
+
+  const cancelEdit = () => {
+    form.setFieldValue('name', userData.name)
+    form.setFieldValue('nickname', userData.nickname)
+    form.setFieldValue('birthDate', userData.birthDate)
+    setIsEditing(false)
+  }
+
+  const handleDeleteClick = () => {
+    const confirmed = window.confirm('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')
+    if (confirmed) {
+      deleteMutation.mutate()
     }
-  }, []);
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="p-8 text-center">
-          <h2 className="text-xl font-bold mb-4">로그인이 필요합니다</h2>
-          <p className="text-gray-600">마이페이지를 이용하려면 로그인해주세요.</p>
-        </Card>
-      </div>
-    );
   }
 
   return (
@@ -41,50 +101,192 @@ export default function MyPage() {
               <User className="w-10 h-10 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">{user.name}</h2>
-              <p className="text-gray-600">{user.email}</p>
+              <h2 className="text-2xl font-bold">{userData.name}</h2>
+              <p className="text-gray-600">{userData.email}</p>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">이름</Label>
-              <Input id="name" value={user.name} disabled />
-            </div>
+          {!isEditing ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>이름</Label>
+                <Input value={userData.name} disabled />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">이메일</Label>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-gray-600" />
-                <Input id="email" value={user.email} disabled />
+              <div className="space-y-2">
+                <Label>이메일</Label>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-gray-600" />
+                  <Input value={userData.email} disabled />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>닉네임</Label>
+                <Input value={userData.nickname} disabled />
+              </div>
+
+              <div className="space-y-2">
+                <Label>생년월일</Label>
+                <Input value={userData.birthDate} disabled />
+              </div>
+
+              <div className="space-y-2">
+                <Label>가입일</Label>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-600" />
+                  <Input value={dayjs(userData.createdAt).format('YYYY-MM-DD')} disabled />
+                </div>
               </div>
             </div>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                form.handleSubmit()
+              }}
+              className="space-y-4"
+            >
+              <form.Field
+                name="name"
+                validators={{
+                  onChange: ({ value }) => {
+                    const result = updateUserFormSchema.shape.name.safeParse(value)
+                    return result.success ? undefined : result.error.message
+                  },
+                }}
+              >
+                {(field) => (
+                  <Input
+                    label="이름"
+                    placeholder="홍길동"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    error={field.state.meta.errors.join(', ')}
+                    disabled={updateMutation.isPending}
+                  />
+                )}
+              </form.Field>
 
-            <div className="space-y-2">
-              <Label>가입일</Label>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-600" />
-                <Input value={new Date().toLocaleDateString("ko-KR")} disabled />
+              <div className="space-y-2">
+                <Label>이메일</Label>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-gray-600" />
+                  <Input value={userData.email} disabled />
+                </div>
               </div>
-            </div>
-          </div>
+
+              <form.Field
+                name="nickname"
+                validators={{
+                  onChange: ({ value }) => {
+                    const result = updateUserFormSchema.shape.nickname.safeParse(value)
+                    return result.success ? undefined : result.error.message
+                  },
+                }}
+              >
+                {(field) => (
+                  <Input
+                    label="닉네임"
+                    placeholder="3~10자"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    error={field.state.meta.errors.join(', ')}
+                    disabled={updateMutation.isPending}
+                  />
+                )}
+              </form.Field>
+
+              <form.Field
+                name="birthDate"
+                validators={{
+                  onChange: ({ value }) => {
+                    const result = updateUserFormSchema.shape.birthDate.safeParse(value)
+                    return result.success ? undefined : result.error.message
+                  },
+                }}
+              >
+                {(field) => (
+                  <Input
+                    type="date"
+                    label="생년월일"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    error={field.state.meta.errors.join(', ')}
+                    disabled={updateMutation.isPending}
+                  />
+                )}
+              </form.Field>
+
+              <div className="space-y-2">
+                <Label>가입일</Label>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-600" />
+                  <Input value={dayjs(userData.createdAt).format('YYYY-MM-DD')} disabled />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={cancelEdit}
+                  disabled={updateMutation.isPending}
+                >
+                  취소
+                </Button>
+                <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+                  {([canSubmit, isSubmitting]) => (
+                    <Button
+                      type="submit"
+                      className="flex-1"
+                      disabled={!canSubmit || isSubmitting || updateMutation.isPending}
+                    >
+                      {updateMutation.isPending || isSubmitting ? '수정 중...' : '저장'}
+                    </Button>
+                  )}
+                </form.Subscribe>
+              </div>
+            </form>
+          )}
         </Card>
 
         <Card className="p-6">
           <h3 className="text-xl font-bold mb-4">계정 설정</h3>
           <div className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
-              비밀번호 변경
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              알림 설정
-            </Button>
-            <Button variant="outline" className="w-full justify-start text-red-600">
+            {!isEditing ? (
+              <Button variant="outline" className="w-full justify-start" onClick={enterEditMode}>
+                내 정보 수정
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  const el = document.querySelector('form') as HTMLFormElement | null
+                  el?.requestSubmit()
+                }}
+              >
+                저장
+              </Button>
+            )}
+
+            <Button
+              variant="outline"
+              className="w-full justify-start text-red-600"
+              onClick={handleDeleteClick}
+              disabled={updateMutation.isPending || deleteMutation.isPending}
+            >
               회원 탈퇴
             </Button>
           </div>
         </Card>
       </main>
     </div>
-  );
+  )
 }
