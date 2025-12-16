@@ -1,5 +1,4 @@
 import { authApi } from '@/api/auth'
-import { userApi } from '@/api/user'
 import { Button } from '@/components/ui/Button'
 import {
   Dialog,
@@ -23,7 +22,7 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ open, onOpenChange }: LoginModalProps) {
-  const setUser = useAuthStore((state) => state.setUser)
+  const setAuth = useAuthStore((state) => state.setAuth)
 
   const loginMutation = useMutation({
     mutationFn: authApi.login,
@@ -36,9 +35,8 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
     },
     onSubmit: async ({ value }) => {
       loginMutation.mutate(value as LoginRequest, {
-        onSuccess: async () => {
-          const user = await userApi.getMe()
-          setUser(user)
+        onSuccess: (response) => {
+          setAuth(response.data.user, response.data.tokens)
           form.reset()
           toast.success('로그인되었습니다.')
 

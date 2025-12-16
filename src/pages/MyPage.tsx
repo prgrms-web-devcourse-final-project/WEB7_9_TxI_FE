@@ -16,30 +16,36 @@ import { toast } from 'sonner'
 export default function MyPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { clearUser, updateUser } = useAuthStore()
+  const { user: storeUser, clearUser, updateUser } = useAuthStore()
 
   const [isEditing, setIsEditing] = useState(false)
 
-  const { data: userData } = useSuspenseQuery({
-    queryKey: ['user', 'me'],
-    queryFn: userApi.getMe,
+  const { data: profileData } = useSuspenseQuery({
+    queryKey: ['user', 'profile'],
+    queryFn: userApi.getProfile,
+    enabled: !storeUser?.fullName || !storeUser?.birthDate,
   })
+
+  // store의 user 정보가 있으면 우선 사용, 없으면 profile API 결과 사용
+  const userData = (storeUser?.fullName && storeUser?.birthDate ? storeUser : profileData)!
+
+  console.log(userData)
 
   const defaultFormValues = useMemo(
     () => ({
-      name: userData.name,
-      nickname: userData.nickname,
-      birthDate: userData.birthDate,
+      fullName: userData?.fullName || '',
+      nickname: userData?.nickname || '',
+      birthDate: userData?.birthDate || '',
     }),
     [userData],
   )
 
   // 내 정보 수정
   const updateMutation = useMutation({
-    mutationFn: userApi.updateMe,
+    mutationFn: userApi.updateProfile,
     onSuccess: (data) => {
       updateUser(data)
-      queryClient.invalidateQueries({ queryKey: ['user', 'me'] })
+      queryClient.invalidateQueries({ queryKey: ['user', 'profile'] })
       toast.success('정보가 수정되었습니다.')
       setIsEditing(false)
     },
@@ -70,16 +76,16 @@ export default function MyPage() {
   })
 
   const enterEditMode = () => {
-    form.setFieldValue('name', userData.name)
-    form.setFieldValue('nickname', userData.nickname)
-    form.setFieldValue('birthDate', userData.birthDate)
+    form.setFieldValue('fullName', userData?.fullName || '')
+    form.setFieldValue('nickname', userData?.nickname || '')
+    form.setFieldValue('birthDate', userData?.birthDate || '')
     setIsEditing(true)
   }
 
   const cancelEdit = () => {
-    form.setFieldValue('name', userData.name)
-    form.setFieldValue('nickname', userData.nickname)
-    form.setFieldValue('birthDate', userData.birthDate)
+    form.setFieldValue('fullName', userData?.fullName || '')
+    form.setFieldValue('nickname', userData?.nickname || '')
+    form.setFieldValue('birthDate', userData?.birthDate || '')
     setIsEditing(false)
   }
 
@@ -101,8 +107,8 @@ export default function MyPage() {
               <User className="w-10 h-10 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">{userData.name}</h2>
-              <p className="text-gray-600">{userData.email}</p>
+              <h2 className="text-2xl font-bold">{userData?.fullName || userData?.nickname}</h2>
+              <p className="text-gray-600">{userData?.email}</p>
             </div>
           </div>
 
@@ -110,34 +116,36 @@ export default function MyPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>이름</Label>
-                <Input value={userData.name} disabled />
+                <Input value={userData?.fullName || ''} disabled />
               </div>
 
               <div className="space-y-2">
                 <Label>이메일</Label>
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-gray-600" />
-                  <Input value={userData.email} disabled />
+                  <Input value={userData?.email || ''} disabled />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>닉네임</Label>
-                <Input value={userData.nickname} disabled />
+                <Input value={userData?.nickname || ''} disabled />
               </div>
 
               <div className="space-y-2">
                 <Label>생년월일</Label>
-                <Input value={userData.birthDate} disabled />
+                <Input value={userData?.birthDate || ''} disabled />
               </div>
 
-              <div className="space-y-2">
-                <Label>가입일</Label>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-600" />
-                  <Input value={dayjs(userData.createdAt).format('YYYY-MM-DD')} disabled />
+              {userData?.signupDate && (
+                <div className="space-y-2">
+                  <Label>가입일</Label>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <Input value={dayjs(userData.signupDate).format('YYYY-MM-DD')} disabled />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             <form
@@ -149,11 +157,11 @@ export default function MyPage() {
               className="space-y-4"
             >
               <form.Field
-                name="name"
+                name="fullName"
                 validators={{
                   onChange: ({ value }) => {
                     const result = updateUserFormSchema.shape.name.safeParse(value)
-                    return result.success ? undefined : result.error.message
+                    return result.success ? undefined : result.error.issues[0]?.message
                   },
                 }}
               >
@@ -174,7 +182,7 @@ export default function MyPage() {
                 <Label>이메일</Label>
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-gray-600" />
-                  <Input value={userData.email} disabled />
+                  <Input value={userData?.email || ''} disabled />
                 </div>
               </div>
 
@@ -183,7 +191,7 @@ export default function MyPage() {
                 validators={{
                   onChange: ({ value }) => {
                     const result = updateUserFormSchema.shape.nickname.safeParse(value)
-                    return result.success ? undefined : result.error.message
+                    return result.success ? undefined : result.error.issues[0]?.message
                   },
                 }}
               >
@@ -205,7 +213,7 @@ export default function MyPage() {
                 validators={{
                   onChange: ({ value }) => {
                     const result = updateUserFormSchema.shape.birthDate.safeParse(value)
-                    return result.success ? undefined : result.error.message
+                    return result.success ? undefined : result.error.issues[0]?.message
                   },
                 }}
               >
@@ -222,13 +230,15 @@ export default function MyPage() {
                 )}
               </form.Field>
 
-              <div className="space-y-2">
-                <Label>가입일</Label>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-600" />
-                  <Input value={dayjs(userData.createdAt).format('YYYY-MM-DD')} disabled />
+              {userData?.signupDate && (
+                <div className="space-y-2">
+                  <Label>가입일</Label>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <Input value={dayjs(userData.signupDate).format('YYYY-MM-DD')} disabled />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <Button

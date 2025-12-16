@@ -1,14 +1,31 @@
 export interface User {
-  id: string
-  name: string
+  userId: number
+  fullName?: string
+  email: string
+  nickname: string
+  birthDate?: string
+  role: string
+  signupDate?: string
+}
+
+export interface UserProfile {
+  userId: number
+  fullName: string
   email: string
   nickname: string
   birthDate: string
-  createdAt: string
+  role: string
+  signupDate: string
+}
+
+export interface ApiResponse<T> {
+  status: string
+  message: string
+  data: T
 }
 
 export interface UpdateUserRequest {
-  name?: string
+  fullName?: string
   nickname?: string
   birthDate?: string
 }

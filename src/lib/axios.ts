@@ -11,6 +11,21 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // localStorage에서 토큰 가져오기
+    const authStorage = localStorage.getItem('auth-storage')
+    if (authStorage) {
+      try {
+        const { state } = JSON.parse(authStorage)
+        const accessToken = state?.tokens?.accessToken
+
+        if (accessToken) {
+          config.headers.Authorization = `Bearer ${accessToken}`
+        }
+      } catch (error) {
+        console.error('Failed to parse auth storage:', error)
+      }
+    }
+
     return config
   },
   (error: AxiosError) => {
@@ -29,8 +44,6 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true
 
       try {
-        await apiClient.post('/auth/refresh')
-
         return apiClient(originalRequest)
       } catch (refreshError) {
         window.dispatchEvent(new CustomEvent('auth:logout'))

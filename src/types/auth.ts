@@ -4,7 +4,23 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-	message?: string;
+	status: string;
+	message: string;
+	data: {
+		tokens: {
+			tokenType: string;
+			accessToken: string;
+			accessTokenExpiresAt: number;
+			refreshToken: string;
+			refreshTokenExpiresAt: number;
+		};
+		user: {
+			userId: number;
+			email: string;
+			nickname: string;
+			role: string;
+		};
+	};
 }
 
 export interface SignupRequest {
