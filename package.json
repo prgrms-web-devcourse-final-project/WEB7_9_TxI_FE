@@ -20,8 +20,10 @@
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-error-boundary": "^6.0.0",
+    "root": "git+https://github.com/tanstack/react-query.git",
     "sonner": "^2.0.7",
     "ts-pattern": "^5.9.0",
+    "zod": "^4.2.1",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
