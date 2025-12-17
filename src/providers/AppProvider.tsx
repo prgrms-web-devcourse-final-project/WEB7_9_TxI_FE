@@ -1,33 +1,34 @@
+import { userApi } from '@/api/user'
+import { useAuthStore } from '@/stores/authStore'
 import { type ReactNode, useEffect } from 'react'
 import { Toaster } from 'sonner'
-import { QueryProvider } from './QueryProvider'
 import { ErrorBoundaryProvider } from './ErrorBoundaryProvider'
-import { useAuthStore } from '@/stores/authStore'
-import { userApi } from '@/api/user'
+import { QueryProvider } from './QueryProvider'
 
 interface AppProviderProps {
   children: ReactNode
 }
 
 function AuthInitializer({ children }: { children: ReactNode }) {
-  const { setUser, clearUser } = useAuthStore()
+  const { setUser, clearUser, accessToken, isAuthenticated } = useAuthStore()
 
-  // 앱 초기 로드 시 인증 상태 확인
   useEffect(() => {
     const checkAuth = async () => {
+      if (!isAuthenticated || !accessToken) {
+        return
+      }
+
       try {
-        const user = await userApi.getMe()
-        setUser(user)
-      } catch (error) {
-        // 인증 실패 (쿠키 없음 또는 만료)
+        const { data } = await userApi.getUserProfile()
+        setUser(data)
+      } catch {
         clearUser()
       }
     }
 
     checkAuth()
-  }, [setUser, clearUser])
+  }, [accessToken, isAuthenticated, setUser, clearUser])
 
-  // Axios에서 발생하는 로그아웃 이벤트 리스닝
   useEffect(() => {
     const handleLogout = () => {
       clearUser()
@@ -48,12 +49,7 @@ export function AppProvider({ children }: AppProviderProps) {
       <QueryProvider>
         <AuthInitializer>
           {children}
-          <Toaster
-            position="top-right"
-            richColors
-            closeButton
-            theme="system"
-          />
+          <Toaster position="top-right" richColors closeButton theme="system" />
         </AuthInitializer>
       </QueryProvider>
     </ErrorBoundaryProvider>

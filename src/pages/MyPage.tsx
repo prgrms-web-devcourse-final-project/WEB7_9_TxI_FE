@@ -42,6 +42,9 @@ export default function MyPage() {
     mutationFn: authApi.verifyPassword,
     onSuccess: () => {
       setIsPasswordModalOpen(false)
+      form.setFieldValue('fullName', userData.data.fullName)
+      form.setFieldValue('nickname', userData.data.nickname)
+      form.setFieldValue('birthDate', userData.data.birthDate)
       setIsEditing(true)
     },
     onError: (error: Error) => {
@@ -56,6 +59,9 @@ export default function MyPage() {
       queryClient.invalidateQueries({ queryKey: ['user', 'me'] })
       toast.success('정보가 수정되었습니다.')
       setIsEditing(false)
+      form.setFieldValue('fullName', data.fullName)
+      form.setFieldValue('nickname', data.nickname)
+      form.setFieldValue('birthDate', data.birthDate)
     },
     onError: (error: Error) => {
       toast.error(error.message)
@@ -92,6 +98,13 @@ export default function MyPage() {
 
   const handlePasswordConfirm = (password: string) => {
     verifyPasswordMutation.mutate({ password })
+  }
+
+  const handleCancelEdit = () => {
+    form.setFieldValue('fullName', userData.data.fullName)
+    form.setFieldValue('nickname', userData.data.nickname)
+    form.setFieldValue('birthDate', userData.data.birthDate)
+    setIsEditing(false)
   }
 
   const handleDeleteClick = () => {
@@ -246,7 +259,7 @@ export default function MyPage() {
                   type="button"
                   variant="outline"
                   className="flex-1"
-                  onClick={() => setIsEditing(false)}
+                  onClick={handleCancelEdit}
                   disabled={updateMutation.isPending}
                 >
                   취소

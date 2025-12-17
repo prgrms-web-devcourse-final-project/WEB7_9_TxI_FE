@@ -23,7 +23,7 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ open, onOpenChange }: LoginModalProps) {
-  const setUser = useAuthStore((state) => state.setUser)
+  const { setUser, setAccessToken } = useAuthStore()
 
   const loginMutation = useMutation({
     mutationFn: authApi.login,
@@ -36,7 +36,9 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
     },
     onSubmit: async ({ value }) => {
       loginMutation.mutate(value as LoginRequest, {
-        onSuccess: async () => {
+        onSuccess: async (response) => {
+          setAccessToken(response.data.tokens.accessToken)
+
           form.reset()
           toast.success('로그인되었습니다.')
 
