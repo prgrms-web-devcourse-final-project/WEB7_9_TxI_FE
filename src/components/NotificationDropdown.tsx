@@ -6,56 +6,11 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu'
-import { Bell } from 'lucide-react'
-import { useEffect, useState } from 'react'
-
-export interface Notification {
-  id: string
-  type: 'ticketing' | 'registration' | 'payment' | 'info'
-  title: string
-  message: string
-  timestamp: string
-  read: boolean
-}
+import { useNotifications } from '@/hooks/useNotifications'
+import { Bell, WifiOff } from 'lucide-react'
 
 export function NotificationDropdown() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
-
-  useEffect(() => {
-    const stored = localStorage.getItem('notifications')
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      setNotifications(parsed)
-      setUnreadCount(parsed.filter((n: Notification) => !n.read).length)
-    }
-
-    const handleStorageChange = () => {
-      const stored = localStorage.getItem('notifications')
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        setNotifications(parsed)
-        setUnreadCount(parsed.filter((n: Notification) => !n.read).length)
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
-
-  const markAsRead = (id: string) => {
-    const updated = notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
-    setNotifications(updated)
-    localStorage.setItem('notifications', JSON.stringify(updated))
-    setUnreadCount(updated.filter((n) => !n.read).length)
-  }
-
-  const markAllAsRead = () => {
-    const updated = notifications.map((n) => ({ ...n, read: true }))
-    setNotifications(updated)
-    localStorage.setItem('notifications', JSON.stringify(updated))
-    setUnreadCount(0)
-  }
+  const { notifications, unreadCount, isConnected, markAsRead, markAllAsRead } = useNotifications()
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -98,7 +53,15 @@ export function NotificationDropdown() {
       <DropdownMenuContent align="end" className="w-96">
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-lg">알림</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-lg">알림</h3>
+              {!isConnected && (
+                <div className="flex items-center gap-1 text-xs text-gray-600">
+                  <WifiOff className="w-3 h-3" />
+                  <span>연결 끊김</span>
+                </div>
+              )}
+            </div>
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
