@@ -82,7 +82,7 @@ export function SignupModal({ open, onOpenChange }: Props) {
             validators={{
               onChange: ({ value }) => {
                 const result = signupFormSchema.shape.fullName.safeParse(value)
-                return result.success ? undefined : result.error.message
+                return result.success ? undefined : result.error.issues[0]?.message
               },
             }}
           >
@@ -104,7 +104,7 @@ export function SignupModal({ open, onOpenChange }: Props) {
             validators={{
               onChange: ({ value }) => {
                 const result = signupFormSchema.shape.email.safeParse(value)
-                return result.success ? undefined : result.error.message
+                return result.success ? undefined : result.error.issues[0]?.message
               },
             }}
           >
@@ -127,7 +127,7 @@ export function SignupModal({ open, onOpenChange }: Props) {
             validators={{
               onChange: ({ value }) => {
                 const result = signupFormSchema.shape.nickname.safeParse(value)
-                return result.success ? undefined : result.error.message
+                return result.success ? undefined : result.error.issues[0]?.message
               },
             }}
           >
@@ -149,7 +149,7 @@ export function SignupModal({ open, onOpenChange }: Props) {
             validators={{
               onChange: ({ value }) => {
                 const result = signupFormSchema.shape.birthDate.safeParse(value)
-                return result.success ? undefined : result.error.message
+                return result.success ? undefined : result.error.issues[0]?.message
               },
             }}
           >
@@ -171,7 +171,7 @@ export function SignupModal({ open, onOpenChange }: Props) {
             validators={{
               onChange: ({ value }) => {
                 const result = signupFormSchema.shape.password.safeParse(value)
-                return result.success ? undefined : result.error.message
+                return result.success ? undefined : result.error.issues[0]?.message
               },
             }}
           >
