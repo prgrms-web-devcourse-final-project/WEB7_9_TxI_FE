@@ -1,49 +1,47 @@
-import { Button } from "@/components/ui/Button";
-import { Ticket } from "lucide-react";
-import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
-import { NotificationDropdown } from "@/components/NotificationDropdown";
-import { useAuthStore } from "@/stores/authStore";
-import { authApi } from "@/api/auth";
-import { toast } from "sonner";
+import { authApi } from '@/api/auth'
+import { NotificationDropdown } from '@/components/NotificationDropdown'
+import { Button } from '@/components/ui/Button'
+import { useAuthStore } from '@/stores/authStore'
+import { useMutation } from '@tanstack/react-query'
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
+import { Ticket } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface HeaderProps {
-  onLoginClick: () => void;
-  onSignupClick: () => void;
+  onLoginClick: () => void
+  onSignupClick: () => void
 }
 
 export function Header({ onLoginClick, onSignupClick }: HeaderProps) {
-  const router = useRouterState();
-  const navigate = useNavigate();
-  const currentPath = router.location.pathname;
-  const { isAuthenticated, clearUser } = useAuthStore();
+  const router = useRouterState()
+  const navigate = useNavigate()
+  const currentPath = router.location.pathname
+  const { isAuthenticated, clearUser } = useAuthStore()
 
   // 로그아웃 mutation
   const logoutMutation = useMutation({
     mutationFn: authApi.logout,
     onSuccess: () => {
-      clearUser();
-      toast.success("로그아웃되었습니다.");
-      navigate({ to: "/" });
+      clearUser()
+      toast.success('로그아웃되었습니다.')
+      navigate({ to: '/' })
     },
-    onError: (error: any) => {
-      console.error("Logout failed:", error);
-      // 로그아웃 실패해도 클라이언트 상태는 클리어
-      clearUser();
-      navigate({ to: "/" });
+    onError: () => {
+      clearUser()
+      navigate({ to: '/' })
     },
-  });
+  })
 
   const isActive = (path: string) => {
-    if (path === "/") {
-      return currentPath === "/";
+    if (path === '/') {
+      return currentPath === '/'
     }
-    return currentPath.startsWith(path);
-  };
+    return currentPath.startsWith(path)
+  }
 
   const handleLogout = () => {
-    logoutMutation.mutate();
-  };
+    logoutMutation.mutate()
+  }
 
   return (
     <header className="border-b border-gray-200 bg-white/95 backdrop-blur sticky top-0 z-50">
@@ -58,9 +56,9 @@ export function Header({ onLoginClick, onSignupClick }: HeaderProps) {
           <Link
             to="/events"
             className={`text-sm transition-colors ${
-              isActive("/events")
-                ? "text-blue-600 font-medium"
-                : "text-gray-600 hover:text-gray-900"
+              isActive('/events')
+                ? 'text-blue-600 font-medium'
+                : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             이벤트
@@ -68,9 +66,7 @@ export function Header({ onLoginClick, onSignupClick }: HeaderProps) {
           <Link
             to="/faq"
             className={`text-sm transition-colors ${
-              isActive("/faq")
-                ? "text-blue-600 font-medium"
-                : "text-gray-600 hover:text-gray-900"
+              isActive('/faq') ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             FAQ
@@ -92,7 +88,7 @@ export function Header({ onLoginClick, onSignupClick }: HeaderProps) {
                 onClick={handleLogout}
                 disabled={logoutMutation.isPending}
               >
-                {logoutMutation.isPending ? "로그아웃 중..." : "로그아웃"}
+                {logoutMutation.isPending ? '로그아웃 중...' : '로그아웃'}
               </Button>
             </>
           ) : (
@@ -108,5 +104,5 @@ export function Header({ onLoginClick, onSignupClick }: HeaderProps) {
         </div>
       </div>
     </header>
-  );
+  )
 }
