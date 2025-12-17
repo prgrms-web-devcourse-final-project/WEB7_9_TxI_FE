@@ -22,30 +22,28 @@ export default function MyPage() {
 
   const { data: userData } = useSuspenseQuery({
     queryKey: ['user', 'me'],
-    queryFn: userApi.getMe,
+    queryFn: userApi.getUserProfile,
   })
 
   const defaultFormValues = useMemo(
     () => ({
-      name: userData.name,
-      nickname: userData.nickname,
-      birthDate: userData.birthDate,
+      name: userData.data.fullName,
+      nickname: userData.data.nickname,
+      birthDate: userData.data.birthDate,
     }),
     [userData],
   )
 
-  // 내 정보 수정
   const updateMutation = useMutation({
-    mutationFn: userApi.updateMe,
-    onSuccess: (data) => {
+    mutationFn: userApi.updateUserProfile,
+    onSuccess: ({ data }) => {
       updateUser(data)
       queryClient.invalidateQueries({ queryKey: ['user', 'me'] })
       toast.success('정보가 수정되었습니다.')
       setIsEditing(false)
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || '정보 수정에 실패했습니다.'
-      toast.error(message)
+    onError: (error: Error) => {
+      toast.error(error.message)
     },
   })
 
@@ -57,15 +55,14 @@ export default function MyPage() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: userApi.deleteMe,
+    mutationFn: userApi.deleteUser,
     onSuccess: () => {
       toast.success('회원 탈퇴가 완료되었습니다.')
       clearUser()
       navigate({ to: '/' })
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || '회원 탈퇴에 실패했습니다.'
-      toast.error(message)
+    onError: (error: Error) => {
+      toast.error(error.message)
     },
   })
 

@@ -1,14 +1,17 @@
 export interface User {
-  id: string
-  name: string
+  userId: number
   email: string
+  fullName: string
   nickname: string
+  role: string
   birthDate: string
-  createdAt: string
+  signupDate: string
 }
 
 export interface UpdateUserRequest {
-  name?: string
-  nickname?: string
-  birthDate?: string
+  fullName: string
+  nickname: string
+  year: string
+  month: string
+  day: string
 }

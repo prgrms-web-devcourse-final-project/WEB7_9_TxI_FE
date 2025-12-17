@@ -1,21 +1,30 @@
 export interface LoginRequest {
-	email: string;
-	password: string;
-}
-
-export interface LoginResponse {
-	message?: string;
+  email: string
+  password: string
 }
 
 export interface SignupRequest {
-	name: string;
-	email: string;
-	nickname: string;
-	birthDate: string; // YYYY-MM-DD 형식
-	password: string;
-	passwordConfirm: string;
+  email: string
+  password: string
+  fullName: string
+  nickname: string
+  year: string
+  month: string
+  day: string
 }
 
-export interface SignupResponse {
-	message?: string;
+export interface AuthData {
+  tokens: {
+    tokenType: string
+    accessToken: string
+    accessTokenExpiresAt: number
+    refreshToken: string
+    refreshTokenExpiresAt: number
+  }
+  user: {
+    userId: number
+    email: string
+    nickname: string
+    role: string
+  }
 }

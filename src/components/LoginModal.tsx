@@ -37,7 +37,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
     onSubmit: async ({ value }) => {
       loginMutation.mutate(value as LoginRequest, {
         onSuccess: async () => {
-          const user = await userApi.getMe()
+          const user = await userApi.getUserProfile()
           setUser(user)
           form.reset()
           toast.success('로그인되었습니다.')
