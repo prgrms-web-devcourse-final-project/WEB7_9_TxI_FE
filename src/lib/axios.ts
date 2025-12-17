@@ -27,7 +27,7 @@ apiClient.interceptors.response.use(
   (response) => {
     return response
   },
-  async (error: AxiosError<{ status: string; message: string; data?: any }>) => {
+  async (error: AxiosError<{ status: string; message: string; data?: unknown }>) => {
     if (error.response?.data?.message) {
       return Promise.reject(new Error(error.response.data.message))
     }

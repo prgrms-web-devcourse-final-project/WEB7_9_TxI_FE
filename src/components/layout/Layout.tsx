@@ -4,7 +4,6 @@ import { LoginModal } from '@/components/LoginModal'
 import { SignupModal } from '@/components/SignupModal'
 import { type ReactNode, Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { Toaster } from 'sonner'
 import { Footer } from './Footer'
 import { Header } from './Header'
 
@@ -28,7 +27,6 @@ export function Layout({ children }: LayoutProps) {
         </ErrorBoundary>
       </main>
       <Footer />
-      <Toaster position="top-right" richColors />
       <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
       <SignupModal open={isSignupModalOpen} onOpenChange={setIsSignupModalOpen} />
     </div>
