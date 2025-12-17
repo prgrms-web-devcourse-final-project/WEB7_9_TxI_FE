@@ -145,21 +145,3 @@ export function NotificationDropdown() {
     </DropdownMenu>
   )
 }
-
-export function addNotification(notification: Omit<Notification, 'id' | 'read'>) {
-  const stored = localStorage.getItem('notifications')
-  const existing = stored ? JSON.parse(stored) : []
-
-  const newNotification = {
-    ...notification,
-    id: Date.now().toString(),
-    read: false,
-  }
-
-  const updated = [newNotification, ...existing].slice(0, 50)
-  localStorage.setItem('notifications', JSON.stringify(updated))
-
-  window.dispatchEvent(new Event('storage'))
-}
-
-export default NotificationDropdown

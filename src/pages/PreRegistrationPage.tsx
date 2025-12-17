@@ -1,4 +1,3 @@
-import { addNotification } from '@/components/NotificationDropdown'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Checkbox } from '@/components/ui/Checkbox'
@@ -40,13 +39,6 @@ export default function PreRegistrationPage() {
 
     setTimeout(() => {
       localStorage.setItem(`preRegistered_${id}`, 'true')
-
-      addNotification({
-        type: 'registration',
-        title: '사전등록 완료',
-        message: '사전등록이 완료되었습니다. 티켓팅 시작일에 알림을 보내드리겠습니다.',
-        timestamp: new Date().toLocaleString('ko-KR'),
-      })
 
       toast.success('사전등록 완료! 티켓팅 시작일에 대기열에 입장하실 수 있습니다.')
       navigate({ to: `/events/${id}` })
