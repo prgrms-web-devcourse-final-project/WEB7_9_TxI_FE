@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@stomp/stompjs": "^7.2.1",
     "@tanstack/react-form": "^1.27.1",
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-router": "^1.139.14",
@@ -23,8 +24,10 @@
     "react-dom": "^19.2.1",
     "react-error-boundary": "^6.0.0",
     "root": "git+https://github.com/tanstack/react-query.git",
+    "sockjs-client": "^1.6.1",
     "sonner": "^2.0.7",
     "ts-pattern": "^5.9.0",
+    "ws": "^8.18.3",
     "zod": "^4.2.1",
     "zustand": "^5.0.9"
   },
@@ -33,6 +36,7 @@
     "@tailwindcss/vite": "^4.1.17",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/sockjs-client": "^1.5.4",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.22",
     "eslint": "^9.18.0",

@@ -6,82 +6,34 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu'
-import { Bell } from 'lucide-react'
-import { useEffect, useState } from 'react'
-
-export interface Notification {
-  id: string
-  type: 'ticketing' | 'registration' | 'payment' | 'info'
-  title: string
-  message: string
-  timestamp: string
-  read: boolean
-}
+import { useNotifications } from '@/hooks/useNotifications'
+import { formatTimestamp } from '@/utils/formatTimestamp'
+import { getTypeColor } from '@/utils/getTypeColor'
+import { getTypeLabel } from '@/utils/getTypeLabel'
+import { AlertCircle, Bell, WifiOff } from 'lucide-react'
+import { useEffect } from 'react'
 
 export function NotificationDropdown() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
+  const {
+    notifications,
+    unreadCount,
+    isConnected,
+    error,
+    markAsRead,
+    markAllAsRead,
+    clearError,
+    isMarkingAsRead,
+    isMarkingAllAsRead,
+  } = useNotifications()
 
   useEffect(() => {
-    const stored = localStorage.getItem('notifications')
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      setNotifications(parsed)
-      setUnreadCount(parsed.filter((n: Notification) => !n.read).length)
+    if (error) {
+      const timer = setTimeout(() => {
+        clearError()
+      }, 5000)
+      return () => clearTimeout(timer)
     }
-
-    const handleStorageChange = () => {
-      const stored = localStorage.getItem('notifications')
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        setNotifications(parsed)
-        setUnreadCount(parsed.filter((n: Notification) => !n.read).length)
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
-
-  const markAsRead = (id: string) => {
-    const updated = notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
-    setNotifications(updated)
-    localStorage.setItem('notifications', JSON.stringify(updated))
-    setUnreadCount(updated.filter((n) => !n.read).length)
-  }
-
-  const markAllAsRead = () => {
-    const updated = notifications.map((n) => ({ ...n, read: true }))
-    setNotifications(updated)
-    localStorage.setItem('notifications', JSON.stringify(updated))
-    setUnreadCount(0)
-  }
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'ticketing':
-        return 'bg-blue-600/20 text-blue-600'
-      case 'registration':
-        return 'bg-purple-600/20 text-purple-600'
-      case 'payment':
-        return 'bg-green-500/20 text-green-700'
-      default:
-        return 'bg-gray-200 text-gray-600'
-    }
-  }
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'ticketing':
-        return '티켓팅'
-      case 'registration':
-        return '사전등록'
-      case 'payment':
-        return '결제'
-      default:
-        return '알림'
-    }
-  }
+  }, [error, clearError])
 
   return (
     <DropdownMenu>
@@ -98,18 +50,34 @@ export function NotificationDropdown() {
       <DropdownMenuContent align="end" className="w-96">
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-lg">알림</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-lg">알림</h3>
+              {!isConnected && (
+                <div className="flex items-center gap-1 text-xs text-gray-600">
+                  <WifiOff className="w-3 h-3" />
+                  <span>연결 끊김</span>
+                </div>
+              )}
+            </div>
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={markAllAsRead}
+                disabled={isMarkingAllAsRead}
                 className="text-xs h-auto py-1 px-2"
               >
-                모두 읽음
+                {isMarkingAllAsRead ? '처리 중...' : '모두 읽음'}
               </Button>
             )}
           </div>
+
+          {error && (
+            <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded flex items-center gap-2 text-xs text-red-700">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{error.message}</span>
+            </div>
+          )}
 
           {notifications.length === 0 ? (
             <div className="text-center py-8 text-gray-600 text-sm">새로운 알림이 없습니다</div>
@@ -120,7 +88,7 @@ export function NotificationDropdown() {
                   key={notification.id}
                   className={`p-3 cursor-pointer hover:border-blue-600/50 transition-colors ${
                     !notification.read ? 'border-blue-600/30 bg-blue-600/5' : ''
-                  }`}
+                  } ${isMarkingAsRead ? 'opacity-50 pointer-events-none' : ''}`}
                   onClick={() => markAsRead(notification.id)}
                 >
                   <div className="flex items-start gap-3">
@@ -130,7 +98,9 @@ export function NotificationDropdown() {
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-sm mb-1">{notification.title}</h4>
                       <p className="text-xs text-gray-600 mb-2">{notification.message}</p>
-                      <span className="text-xs text-gray-600">{notification.timestamp}</span>
+                      <span className="text-xs text-gray-600">
+                        {formatTimestamp(notification.timestamp)}
+                      </span>
                     </div>
                     {!notification.read && (
                       <div className="w-2 h-2 bg-blue-600 rounded-full mt-2" />
