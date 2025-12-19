@@ -2,6 +2,7 @@ import { eventsApi } from '@/api/events'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { Progress } from '@/components/ui/Progress'
 import { formatDateTime, formatPriceRange } from '@/utils/format'
 import { getStatusText } from '@/utils/getStatusText'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -16,7 +17,13 @@ export default function EventDetailPage() {
     queryFn: () => eventsApi.getEventById(id),
   })
 
+  const { data: preRegisterCountData } = useSuspenseQuery({
+    queryKey: ['event', id, 'pre-register-count'],
+    queryFn: () => eventsApi.getPreRegisterCount(id),
+  })
+
   const event = data.data
+  const preRegisterCount = preRegisterCountData.data
 
   const ticketDateTime = formatDateTime(event.ticketOpenAt)
   const preOpenDateTime = formatDateTime(event.preOpenAt)
@@ -110,32 +117,12 @@ export default function EventDetailPage() {
 
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-24">
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">가격</span>
-                  <span className="text-2xl font-bold text-blue-600">
-                    {formatPriceRange(event.minPrice, event.maxPrice)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">상태</span>
-                  <Badge className="bg-blue-100 text-blue-700 border-blue-300">
-                    {getStatusText(event.status)}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-6">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">사전 등록 시작</p>
-                  <p className="text-lg font-semibold">{preOpenDateTime.date}</p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">사전 등록 마감</p>
-                  <p className="text-lg font-semibold">{preCloseDateTime.date}</p>
-                </div>
-              </div>
-
+              <Progress
+                value={preRegisterCount}
+                max={event.maxTicketAmount}
+                className="mb-6"
+                title="사전 등록 진행률"
+              />
               <Button className="w-full mb-3" size="lg" asChild>
                 <Link to="/events/$id/register" params={{ id }}>
                   사전 등록하기
@@ -144,7 +131,6 @@ export default function EventDetailPage() {
               <Button variant="outline" className="w-full">
                 알림 받기
               </Button>
-
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="flex items-start gap-2 text-sm text-gray-600">
                   <Shield className="w-4 h-4 mt-0.5 flex-shrink-0" />

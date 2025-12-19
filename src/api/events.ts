@@ -47,4 +47,20 @@ export const eventsApi = {
 
     return response.data
   },
+
+  getPreRegisterCount: async (eventId: string): Promise<ApiResponse<number>> => {
+    const response = await apiClient.get<ApiResponse<number>>(
+      `/events/${eventId}/pre-registers/count`,
+    )
+
+    if (response.data.status === '404 NOT_FOUND') {
+      throw Error(response.data.message)
+    }
+
+    if (response.data.status === '500 INTERNAL_SERVER_ERROR') {
+      throw Error(response.data.message)
+    }
+
+    return response.data
+  },
 }
