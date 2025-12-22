@@ -15,9 +15,33 @@ import type { QueueStep } from './types'
 
 export default function QueuePage() {
   const navigate = useNavigate()
-  const { id } = useParams({ from: '/events/$id' })
+  const { id } = useParams({ from: '/events/$id/queue' })
 
-  const [step, setStep] = useState<QueueStep>('waiting')
+  const { data: queueData } = useSuspenseQuery({
+    queryKey: ['queueStatus', id],
+    queryFn: () => queueApi.getQueueStatus(id),
+  })
+
+  // API 응답의 status에 따라 초기 step 설정
+  const getInitialStep = (): QueueStep => {
+    const status = queueData.data.status
+    switch (status) {
+      case 'WAITING':
+        return 'waiting'
+      case 'ENTERED':
+        return 'ready'
+      case 'EXPIRED':
+        navigate({ to: '/events' })
+        return 'waiting'
+      case 'COMPLETED':
+        navigate({ to: '/my-tickets' })
+        return 'waiting'
+      default:
+        return 'waiting'
+    }
+  }
+
+  const [step, setStep] = useState<QueueStep>(getInitialStep())
   const [selectedSeats, setSelectedSeats] = useState<string[]>([])
   const [selectedSection, setSelectedSection] = useState<SeatSection>('r')
   const [paymentMethod, setPaymentMethod] = useState('card')
@@ -25,11 +49,6 @@ export default function QueuePage() {
   const [agreedTerms, setAgreedTerms] = useState(false)
   const [agreedRefund, setAgreedRefund] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-
-  const { data: queueData } = useSuspenseQuery({
-    queryKey: ['queueStatus', id],
-    queryFn: () => queueApi.getQueueStatus(id),
-  })
 
   const {
     queuePosition,
@@ -43,10 +62,26 @@ export default function QueuePage() {
     enabled: true,
   })
 
-  const { timeLeft, minutes, seconds, start } = useQueueTimer(900, () => {
+  const { minutes, seconds, start } = useQueueTimer(900, () => {
     navigate({ to: '/events' })
   })
 
+  // API 응답의 status가 변경되면 step 업데이트
+  useEffect(() => {
+    const status = queueData.data.status
+    if (status === 'WAITING' && step !== 'waiting' && step !== 'purchase' && step !== 'payment') {
+      setStep('waiting')
+    } else if (status === 'ENTERED' && step === 'waiting') {
+      setStep('ready')
+      start()
+    } else if (status === 'EXPIRED') {
+      navigate({ to: '/events' })
+    } else if (status === 'COMPLETED') {
+      navigate({ to: '/my-tickets' })
+    }
+  }, [queueData.data.status, step, navigate, start])
+
+  // WebSocket 이벤트 처리
   useEffect(() => {
     if (personalEvent) {
       if ('enteredAt' in personalEvent) {
@@ -97,11 +132,7 @@ export default function QueuePage() {
         )}
 
         {step === 'ready' && (
-          <ReadyStep
-            minutes={minutes}
-            seconds={seconds}
-            onEnter={() => setStep('purchase')}
-          />
+          <ReadyStep minutes={minutes} seconds={seconds} onEnter={() => setStep('purchase')} />
         )}
 
         {step === 'purchase' && (

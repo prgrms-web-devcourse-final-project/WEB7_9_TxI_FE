@@ -47,6 +47,7 @@ export default function EventDetailPage() {
 
   const event = data.data
   const preRegisterCount = preRegisterCountData.data
+
   const isRegistered = preRegisterStatusData?.data ?? false
 
   const ticketDateTime = formatDateTime(event.ticketOpenAt)
@@ -85,10 +86,10 @@ export default function EventDetailPage() {
   }
 
   const handleTicketing = () => {
-    navigate({ to: `/queue/${id}` })
+    navigate({ to: `/events/${id}/queue` })
   }
 
-  const getButtonConfig = (status: EventStatus) => {
+  const getButtonConfig = (status: EventStatus, registered: boolean) => {
     switch (status) {
       case 'READY':
         return {
@@ -98,9 +99,8 @@ export default function EventDetailPage() {
         }
       case 'PRE_OPEN':
         return {
-          text: isRegistered ? '사전등록 취소' : '사전 등록하기',
-          disabled:
-            createPreRegisterMutation.isPending || deletePreRegisterMutation.isPending,
+          text: registered ? '사전등록 취소' : '사전 등록하기',
+          disabled: createPreRegisterMutation.isPending || deletePreRegisterMutation.isPending,
           onClick: handlePreRegister,
         }
       case 'PRE_CLOSED':
@@ -111,6 +111,13 @@ export default function EventDetailPage() {
           onClick: () => {},
         }
       case 'OPEN':
+        if (!registered) {
+          return {
+            text: '사전 등록 필요',
+            disabled: true,
+            onClick: () => {},
+          }
+        }
         return {
           text: '티켓팅 입장',
           disabled: false,
@@ -131,7 +138,7 @@ export default function EventDetailPage() {
     }
   }
 
-  const buttonConfig = getButtonConfig(event.status)
+  const buttonConfig = getButtonConfig(event.status, isRegistered)
 
   return (
     <>
