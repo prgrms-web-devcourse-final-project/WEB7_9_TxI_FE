@@ -18,7 +18,6 @@ export function Header({ onLoginClick, onSignupClick }: HeaderProps) {
   const currentPath = router.location.pathname
   const { isAuthenticated, clearUser } = useAuthStore()
 
-  // 로그아웃 mutation
   const logoutMutation = useMutation({
     mutationFn: authApi.logout,
     onSuccess: () => {
