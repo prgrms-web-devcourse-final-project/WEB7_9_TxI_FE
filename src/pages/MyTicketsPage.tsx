@@ -4,14 +4,24 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
+import { MyTicketDetailModal } from '@/components/MyTicketDetailModal'
 import { formatDateTime } from '@/utils/format'
 import { getTicketStatusBadgeClass } from '@/utils/getTicketStatusBadgeClass'
 import { getTicketStatusText } from '@/utils/getTicketStatusText'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
-import { ArrowRight, Calendar, MapPin, Ticket as TicketIcon } from 'lucide-react'
+import { useState } from 'react'
+import {
+  ArrowRight,
+  Calendar,
+  Check,
+  MapPin,
+  Ticket as TicketIcon,
+  BadgeDollarSignIcon,
+} from 'lucide-react'
 
 export default function MyTicketsPage() {
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
+
   const { data: preRegistersData } = useSuspenseQuery({
     queryKey: ['myPreRegisters'],
     queryFn: () => preRegisterApi.getMyPreRegisters(),
@@ -74,12 +84,10 @@ export default function MyTicketsPage() {
                             {formatDateTime(preRegister.ticketOpenAt).time}
                           </span>
                         </div>
-                      </div>
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-gray-600">등록일</p>
-                        <p className="text-lg font-semibold text-blue-600">
-                          {formatDateTime(preRegister.createdAt).date}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4" />
+                          <span>등록일: {formatDateTime(preRegister.createdAt).date}</span>
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -122,22 +130,18 @@ export default function MyTicketsPage() {
                             <span>사용일: {formatDateTime(ticket.usedAt).date}</span>
                           </div>
                         )}
-                      </div>
-                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-600">가격</p>
-                        <p className="text-lg font-bold text-blue-600">
-                          {ticket.seatPrice.toLocaleString()}원
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <BadgeDollarSignIcon className="w-4 h-4" />
+                          <span>가격: {ticket.seatPrice.toLocaleString()}원</span>
+                        </div>
                       </div>
                       <div className="flex gap-3">
-                        <Button className="flex-1" asChild>
-                          <Link
-                            to="/my-tickets/$ticketId"
-                            params={{ ticketId: String(ticket.ticketId) }}
-                          >
-                            티켓 상세보기
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                          </Link>
+                        <Button
+                          className="flex-1"
+                          onClick={() => setSelectedTicketId(String(ticket.ticketId))}
+                        >
+                          티켓 상세보기
+                          <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                       </div>
                     </div>
@@ -148,6 +152,14 @@ export default function MyTicketsPage() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {selectedTicketId && (
+        <MyTicketDetailModal
+          open={!!selectedTicketId}
+          onOpenChange={(open) => !open && setSelectedTicketId(null)}
+          ticketId={selectedTicketId}
+        />
+      )}
     </div>
   )
 }

@@ -1,47 +1,45 @@
-import type { ReactNode } from "react";
-import { X } from "lucide-react";
+import type { ReactNode } from 'react'
+import { X } from 'lucide-react'
 
 interface DialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  children: ReactNode;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  children: ReactNode
 }
 
 interface DialogContentProps {
-  children: ReactNode;
-  className?: string;
+  children: ReactNode
+  className?: string
 }
 
 interface DialogHeaderProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 interface DialogTitleProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 interface DialogDescriptionProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
-  if (!open) return null;
+  if (!open) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60"
         onClick={() => onOpenChange(false)}
         aria-hidden="true"
       />
-      {/* Dialog content */}
       {children}
     </div>
-  );
+  )
 }
 
-export function DialogContent({ children, className = "" }: DialogContentProps) {
+export function DialogContent({ children, className = '' }: DialogContentProps) {
   return (
     <div
       className={`relative z-50 w-full max-w-md bg-white rounded-lg shadow-xl p-6 mx-auto ${className}`}
@@ -51,19 +49,19 @@ export function DialogContent({ children, className = "" }: DialogContentProps) 
     >
       {children}
     </div>
-  );
+  )
 }
 
 export function DialogHeader({ children }: DialogHeaderProps) {
-  return <div className="mb-4">{children}</div>;
+  return <div className="mb-4">{children}</div>
 }
 
 export function DialogTitle({ children }: DialogTitleProps) {
-  return <h2 className="text-xl font-bold text-gray-900">{children}</h2>;
+  return <h2 className="text-xl font-bold text-gray-900">{children}</h2>
 }
 
 export function DialogDescription({ children }: DialogDescriptionProps) {
-  return <p className="text-sm text-gray-600 mt-1">{children}</p>;
+  return <p className="text-sm text-gray-600 mt-1">{children}</p>
 }
 
 export function DialogClose({ onClose }: { onClose: () => void }) {
@@ -75,5 +73,5 @@ export function DialogClose({ onClose }: { onClose: () => void }) {
       <X className="h-4 w-4" />
       <span className="sr-only">닫기</span>
     </button>
-  );
+  )
 }

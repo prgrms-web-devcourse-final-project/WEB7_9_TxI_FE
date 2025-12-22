@@ -7,7 +7,6 @@ import { Route as eventDetailRoute } from "./routes/events/$id";
 import { Route as eventRegisterRoute } from "./routes/events/$id/register";
 import { Route as eventQueueRoute } from "./routes/events/$id/queue";
 import { Route as myTicketsRoute } from "./routes/my-tickets";
-import { Route as myTicketDetailRoute } from "./routes/my-tickets/$ticketId";
 import { Route as myPageRoute } from "./routes/my-page";
 
 const routeTree = rootRoute.addChildren([
@@ -18,7 +17,6 @@ const routeTree = rootRoute.addChildren([
   eventRegisterRoute,
   eventQueueRoute,
   myTicketsRoute,
-  myTicketDetailRoute,
   myPageRoute,
 ]);
 
