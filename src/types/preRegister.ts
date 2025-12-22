@@ -6,4 +6,9 @@ export interface PreRegister {
   userId: number
   status: PreRegisterStatus
   createdAt: string
+  imageUrl: string
+  eventTitle: string
+  eventDate: string
+  place: string
+  ticketOpenAt: string
 }
