@@ -166,12 +166,14 @@ export default function QueuePage() {
         )}
       </main>
 
-      <PaymentSuccessModal
-        open={showSuccessModal}
-        onOpenChange={setShowSuccessModal}
-        eventId={id}
-        selectedSeats={selectedSeats}
-      />
+      {showSuccessModal && (
+        <PaymentSuccessModal
+          open={showSuccessModal}
+          onOpenChange={setShowSuccessModal}
+          eventId={id}
+          selectedSeats={selectedSeats}
+        />
+      )}
     </div>
   )
 }
