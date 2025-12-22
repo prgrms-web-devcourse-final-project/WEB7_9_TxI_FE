@@ -67,10 +67,8 @@ export function EventCard({ event }: { event: Event }) {
           </Badge>
         </div>
         <div className="p-5">
+          <Badge className="mb-3">{EVENT_CATEGORY_MAP[event.category] || event.category}</Badge>
           <h3 className="text-xl font-bold mb-1">{event.title}</h3>
-          <p className="text-gray-600 text-sm mb-4">
-            {EVENT_CATEGORY_MAP[event.category] || event.category}
-          </p>
 
           <div className="space-y-2 mb-4">
             <div className="flex items-center gap-2 text-sm text-gray-600">

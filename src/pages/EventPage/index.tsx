@@ -70,25 +70,27 @@ export default function EventsPage() {
         <div className="container mx-auto px-4">
           <ErrorBoundary FallbackComponent={PageErrorFallback}>
             <Suspense fallback={<LoadingFallback />}>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {events.length === 0 ? (
-                  <section className="py-16 bg-gray-50">
-                    <div className="container mx-auto px-4 text-center">
-                      <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                        원하는 이벤트를 찾지 못하셨나요?
-                      </h2>
-                      <p className="text-gray-600 mb-6">새로운 이벤트가 계속 추가되고 있습니다</p>
-                      <Link to="/">
-                        <Button variant="outline" size="lg">
-                          홈으로 돌아가기
-                        </Button>
-                      </Link>
-                    </div>
-                  </section>
-                ) : (
-                  events.map((event) => <EventCard key={event.id} event={event} />)
-                )}
-              </div>
+              {events.length === 0 ? (
+                <section className="py-16 bg-gray-50">
+                  <div className="container mx-auto px-4 text-center">
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                      원하는 이벤트를 찾지 못하셨나요?
+                    </h2>
+                    <p className="text-gray-600 mb-6">새로운 이벤트가 계속 추가되고 있습니다</p>
+                    <Link to="/">
+                      <Button variant="outline" size="lg">
+                        홈으로 돌아가기
+                      </Button>
+                    </Link>
+                  </div>
+                </section>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {events.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              )}
 
               {totalPages > 1 && (
                 <Pagination

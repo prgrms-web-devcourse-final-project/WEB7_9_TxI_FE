@@ -244,9 +244,7 @@ export default function EventDetailPage() {
                   ? '처리 중...'
                   : buttonConfig.text}
               </Button>
-              <Button variant="outline" className="w-full">
-                알림 받기
-              </Button>
+
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="flex items-start gap-2 text-sm text-gray-600">
                   <Shield className="w-4 h-4 mt-0.5 flex-shrink-0" />
