@@ -13,6 +13,15 @@ import { Link, useParams } from '@tanstack/react-router'
 import { ArrowLeft, Calendar, Clock, MapPin, Shield, Tag } from 'lucide-react'
 import { toast } from 'sonner'
 
+// 이벤트 상태: READY(준비중), PRE_OPEN(사전등록 가능), PRE_CLOSED(사전등록 완료), QUEUE_READY(대기열 준비), OPEN(티켓팅 시작), CLOSED(이벤트 종료)
+
+// READY - 이벤트는 OPEN
+// PRE_OPEN - 사전등록 가능
+// PRE_CLOSED - 사전등록 완료
+// QUEUE_READY - 대기열 준비
+// OPEN - 티켓팅 시작
+// CLOSED - 이벤트 종료
+
 export default function EventDetailPage() {
   const { id } = useParams({ from: '/events/$id' })
   const { isAuthenticated } = useAuthStore()
@@ -48,6 +57,7 @@ export default function EventDetailPage() {
   const preCloseDateTime = formatDateTime(event.preCloseAt)
 
   const handlePreRegister = () => {
+    // TODOS: 이미 사전등록 완료되어있으면 호출하는 주소를 /api/v1/events/{eventId}/pre-registers delete 요청으로 변경하기
     if (!isAuthenticated) {
       toast.error('로그인 후 이용해주세요.')
       return

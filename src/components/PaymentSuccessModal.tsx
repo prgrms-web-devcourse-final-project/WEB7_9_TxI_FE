@@ -11,13 +11,9 @@ import {
 import { Separator } from '@/components/ui/Separator'
 import { CheckCircle2, Ticket } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
-
-const seatMap = {
-  vip: { label: 'VIP석', price: 150000 },
-  r: { label: 'R석', price: 99000 },
-  s: { label: 'S석', price: 79000 },
-  a: { label: 'A석', price: 59000 },
-}
+import { seatMap, seatPrices } from '@/components/SeatMap/constants'
+import type { SeatSection } from '@/components/SeatMap/types'
+import { calculateTotalPrice } from '@/utils/priceCalculator'
 
 interface PaymentSuccessModalProps {
   open: boolean
@@ -30,10 +26,7 @@ export function PaymentSuccessModal({
   onOpenChange,
   selectedSeats,
 }: PaymentSuccessModalProps) {
-  const totalPrice = selectedSeats.reduce((sum, seatId) => {
-    const section = seatId.split('-')[0] as keyof typeof seatMap
-    return sum + seatMap[section].price
-  }, 0)
+  const totalPrice = calculateTotalPrice(selectedSeats)
 
   const orderNumber = `WF${Date.now().toString().slice(-10)}`
   const orderDate = new Date().toLocaleString('ko-KR', {
@@ -91,10 +84,11 @@ export function PaymentSuccessModal({
               <div className="text-sm text-gray-600 mb-2">좌석 정보</div>
               <div className="space-y-2">
                 {selectedSeats.map((seatId, index) => {
-                  const [section, row, seat] = seatId.split('-')
-                  const sectionData = seatMap[section as keyof typeof seatMap]
-                  const rowLabel = String.fromCharCode(65 + Number.parseInt(row))
-                  const seatNumber = Number.parseInt(seat) + 1
+                  const section = seatId.split('-')[0] as SeatSection
+                  const sectionData = seatMap[section]
+                  const rowLabel = String.fromCharCode(65 + Number.parseInt(seatId.split('-')[1]))
+                  const seatNumber = Number.parseInt(seatId.split('-')[2]) + 1
+                  const price = seatPrices[section]
 
                   return (
                     <div
@@ -109,7 +103,7 @@ export function PaymentSuccessModal({
                           {rowLabel}열 {seatNumber}번
                         </div>
                       </div>
-                      <div className="font-bold">{sectionData.price.toLocaleString()}원</div>
+                      <div className="font-bold">{price.toLocaleString()}원</div>
                     </div>
                   )
                 })}
