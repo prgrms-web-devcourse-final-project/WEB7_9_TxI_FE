@@ -24,34 +24,31 @@ export function useSeatWebSocket({ eventId, enabled = true }: UseSeatWebSocketPa
     const wsClient = getWebSocketClient(WS_URL, () => accessToken)
 
     const handleConnect = () => {
-      console.log('Seat WebSocket connected')
       setIsConnected(true)
 
-      const seatDestination = `/topic/events/${eventId}/seats`
+      const seatDestination = `/events/${eventId}/seats`
       wsClient.subscribe(seatDestination, (message) => {
         try {
           const event: SeatStatusChangeEvent = JSON.parse(message.body)
-          console.log('Seat status changed:', event)
 
           setSeatChanges((prev) => {
             const updated = [event, ...prev]
             return updated.slice(0, 100)
           })
         } catch (error) {
-          console.error('Failed to parse seat status change event:', error)
+          throw new Error('Seat WebSocket error: ' + error)
         }
       })
     }
 
     const handleError = (error: Error) => {
-      console.error('Seat WebSocket error:', error)
-      setIsConnected(false)
+      throw new Error('Seat WebSocket error: ' + error.message)
     }
 
     wsClient.connect(handleConnect, handleError)
 
     return () => {
-      wsClient.unsubscribe(`/topic/events/${eventId}/seats`)
+      wsClient.unsubscribe(`/events/${eventId}/seats`)
     }
   }, [enabled, isAuthenticated, accessToken, eventId])
 
