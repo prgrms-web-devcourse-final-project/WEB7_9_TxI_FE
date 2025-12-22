@@ -14,6 +14,8 @@ export interface WaitingStepProps {
   estimatedWaitTime: number
   progress: number
   isConnected: boolean
+  eventId: string
+  onProcessComplete: () => void
 }
 
 export interface ReadyStepProps {

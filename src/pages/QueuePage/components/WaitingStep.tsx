@@ -1,6 +1,9 @@
 import { Card } from '@/components/ui/Card'
 import { Progress } from '@/components/ui/Progress'
 import { Clock, Loader2, TrendingUp, Users } from 'lucide-react'
+import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { queueApi } from '@/api/queue'
 import type { WaitingStepProps } from '../types'
 
 export function WaitingStep({
@@ -8,7 +11,28 @@ export function WaitingStep({
   estimatedWaitTime,
   progress,
   isConnected,
+  eventId,
+  onProcessComplete,
 }: WaitingStepProps) {
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const isDev = import.meta.env.DEV
+  const queryClient = useQueryClient()
+
+  const handleProcessUntilMe = async () => {
+    setIsProcessing(true)
+    setError(null)
+
+    try {
+      await queueApi.processUntilMe(eventId)
+      await queryClient.invalidateQueries({ queryKey: ['queueStatus', eventId] })
+      onProcessComplete()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '처리 중 오류가 발생했습니다.')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
@@ -92,6 +116,26 @@ export function WaitingStep({
           </div>
         </div>
       </Card>
+
+      {isDev && (
+        <Card className="p-6 mt-6 border-yellow-200 bg-yellow-50">
+          <p className="text-sm text-gray-600 mb-4">
+            이 버튼은 대기열을 건너뛰고 바로 입장 단계로 이동합니다. (개발/로컬 환경 전용)
+          </p>
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-200 rounded text-sm text-red-700">
+              {error}
+            </div>
+          )}
+          <button
+            onClick={handleProcessUntilMe}
+            disabled={isProcessing}
+            className="w-full py-3 px-4 bg-yellow-600 text-white rounded-lg font-semibold hover:bg-yellow-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          >
+            {isProcessing ? '처리 중...' : '대기열 건너뛰기 (테스트)'}
+          </button>
+        </Card>
+      )}
     </div>
   )
 }

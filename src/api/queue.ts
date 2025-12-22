@@ -34,4 +34,36 @@ export const queueApi = {
 
     return response.data
   },
+
+  processUntilMe: async (
+    eventId: string,
+  ): Promise<
+    ApiResponse<{
+      eventId: number
+      processedCount: number
+      remainingWaitingCount: number
+    }>
+  > => {
+    const response = await apiClient.post<
+      ApiResponse<{
+        eventId: number
+        processedCount: number
+        remainingWaitingCount: number
+      }>
+    >(`/queues/${eventId}/process-until-me`)
+
+    if (response.data.status === '400 BAD_REQUEST') {
+      throw Error(response.data.message)
+    }
+
+    if (response.data.status === '404 NOT_FOUND') {
+      throw Error(response.data.message)
+    }
+
+    if (response.data.status === '500 INTERNAL_SERVER_ERROR') {
+      throw Error(response.data.message)
+    }
+
+    return response.data
+  },
 }

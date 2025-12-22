@@ -67,6 +67,7 @@ export default function QueuePage() {
 
   useEffect(() => {
     const status = queueData.data.status
+
     if (status === 'WAITING' && step !== 'waiting' && step !== 'purchase' && step !== 'payment') {
       setStep('waiting')
     } else if (status === 'ENTERED' && step === 'waiting') {
@@ -125,6 +126,11 @@ export default function QueuePage() {
             estimatedWaitTime={currentEstimatedTime}
             progress={currentProgress}
             isConnected={isConnected}
+            eventId={id}
+            onProcessComplete={() => {
+              setStep('ready')
+              start()
+            }}
           />
         )}
 

@@ -20,10 +20,10 @@ export function ReadyStep({ minutes, seconds, onEnter }: ReadyStepProps) {
           <div>
             <div className="font-bold text-red-600 mb-2">⏰ 구매 시간 제한 안내</div>
             <p className="text-sm text-gray-600">
-              현 시점부터{' '}
+              현 시점부터
               <span className="font-bold text-red-600">
                 {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-              </span>{' '}
+              </span>
               이내로 티켓팅을 완료하지 않으면 자동으로 다음 순번으로 넘어갑니다.
             </p>
           </div>
