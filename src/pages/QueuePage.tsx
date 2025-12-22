@@ -60,7 +60,7 @@ export default function QueuePage() {
   const navigate = useNavigate()
   const { id } = useParams({ from: '/events/$id' })
   const [step, setStep] = useState<'waiting' | 'ready' | 'purchase' | 'payment'>('waiting')
-  const [timeLeft, setTimeLeft] = useState(900) // 15 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(900)
   const [selectedSeats, setSelectedSeats] = useState<string[]>([])
   const [selectedSection, setSelectedSection] = useState<string>('r')
   const [paymentMethod, setPaymentMethod] = useState('card')
@@ -86,7 +86,6 @@ export default function QueuePage() {
     enabled: true,
   })
 
-  // Handle personal events (entered, expired, completed)
   useEffect(() => {
     if (personalEvent) {
       if ('enteredAt' in personalEvent) {
@@ -100,7 +99,6 @@ export default function QueuePage() {
     }
   }, [personalEvent, clearPersonalEvent, navigate])
 
-  // Countdown timer
   useEffect(() => {
     if (step !== 'waiting') {
       const timer = setInterval(() => {
@@ -162,7 +160,6 @@ export default function QueuePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
@@ -183,7 +180,6 @@ export default function QueuePage() {
       </header>
 
       <main className="container mx-auto px-4 py-12">
-        {/* Step 1: Waiting in Queue */}
         {step === 'waiting' && (
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-8">
@@ -283,7 +279,6 @@ export default function QueuePage() {
           </div>
         )}
 
-        {/* Step 2: Ready to Enter */}
         {step === 'ready' && (
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-8">
@@ -337,7 +332,6 @@ export default function QueuePage() {
           </div>
         )}
 
-        {/* Step 3: Seat Selection */}
         {step === 'purchase' && (
           <div className="max-w-6xl mx-auto">
             <div className="mb-6">
@@ -544,7 +538,6 @@ export default function QueuePage() {
           </div>
         )}
 
-        {/* Step 4: Payment */}
         {step === 'payment' && (
           <div className="max-w-5xl mx-auto">
             <div className="mb-6">
@@ -795,7 +788,6 @@ export default function QueuePage() {
         )}
       </main>
 
-      {/* Payment Success Modal */}
       <PaymentSuccessModal
         open={showSuccessModal}
         onOpenChange={setShowSuccessModal}
