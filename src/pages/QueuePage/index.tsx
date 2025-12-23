@@ -47,6 +47,7 @@ export default function QueuePage() {
   const [agreedTerms, setAgreedTerms] = useState(false)
   const [agreedRefund, setAgreedRefund] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [orderId, setOrderId] = useState<string>('')
 
   const {
     queuePosition,
@@ -106,6 +107,8 @@ export default function QueuePage() {
 
     setTimeout(() => {
       setIsProcessing(false)
+      // TODO: 실제 결제 API 호출 후 orderId를 받아와서 설정
+      setOrderId('1') // 임시 orderId, 실제 결제 API 응답에서 받아와야 함
       setShowSuccessModal(true)
     }, 2000)
   }
@@ -166,12 +169,11 @@ export default function QueuePage() {
         )}
       </main>
 
-      {showSuccessModal && (
+      {showSuccessModal && orderId && (
         <PaymentSuccessModal
           open={showSuccessModal}
           onOpenChange={setShowSuccessModal}
-          eventId={id}
-          selectedSeats={selectedSeats}
+          orderId={orderId}
         />
       )}
     </div>
