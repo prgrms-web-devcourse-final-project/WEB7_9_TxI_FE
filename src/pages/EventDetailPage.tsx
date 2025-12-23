@@ -256,11 +256,7 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      <PreRegisterSuccessModal
-        open={isSuccessModalOpen}
-        onOpenChange={setIsSuccessModalOpen}
-        eventTitle={event.title}
-      />
+      <PreRegisterSuccessModal open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen} />
     </>
   )
 }
