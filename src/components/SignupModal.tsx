@@ -14,7 +14,7 @@ import { useAuthStore } from '@/stores/authStore'
 import type { SignupRequest } from '@/types/auth'
 import { signupFormSchema } from '@/utils/validation'
 import { useForm } from '@tanstack/react-form'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 interface Props {
@@ -25,6 +25,7 @@ interface Props {
 
 export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
   const { setUser, setAccessToken } = useAuthStore()
+  const queryClient = useQueryClient()
 
   const signupMutation = useMutation({
     mutationFn: authApi.signup,
@@ -55,6 +56,8 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
       signupMutation.mutate(signupData, {
         onSuccess: async () => {
           try {
+            queryClient.clear()
+
             const loginResponse = await authApi.login({
               email: value.email,
               password: value.password,

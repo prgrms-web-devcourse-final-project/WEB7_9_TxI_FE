@@ -2,7 +2,7 @@ import { authApi } from '@/api/auth'
 import { NotificationDropdown } from '@/components/NotificationDropdown'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/stores/authStore'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { Ticket } from 'lucide-react'
 import { toast } from 'sonner'
@@ -17,16 +17,19 @@ export function Header({ onLoginClick, onSignupClick }: HeaderProps) {
   const navigate = useNavigate()
   const currentPath = router.location.pathname
   const { isAuthenticated, clearUser } = useAuthStore()
+  const queryClient = useQueryClient()
 
   const logoutMutation = useMutation({
     mutationFn: authApi.logout,
     onSuccess: () => {
       clearUser()
+      queryClient.clear()
       toast.success('로그아웃되었습니다.')
       navigate({ to: '/' })
     },
     onError: () => {
       clearUser()
+      queryClient.clear()
       navigate({ to: '/' })
     },
   })

@@ -14,7 +14,7 @@ import { useAuthStore } from '@/stores/authStore'
 import type { LoginRequest } from '@/types/auth'
 import { loginFormSchema } from '@/utils/validation'
 import { useForm } from '@tanstack/react-form'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 interface LoginModalProps {
@@ -25,6 +25,7 @@ interface LoginModalProps {
 
 export function LoginModal({ open, onOpenChange, onOpenSignupChange }: LoginModalProps) {
   const { setUser, setAccessToken } = useAuthStore()
+  const queryClient = useQueryClient()
 
   const loginMutation = useMutation({
     mutationFn: authApi.login,
@@ -38,6 +39,8 @@ export function LoginModal({ open, onOpenChange, onOpenSignupChange }: LoginModa
     onSubmit: async ({ value }) => {
       loginMutation.mutate(value as LoginRequest, {
         onSuccess: async (response) => {
+          queryClient.clear()
+
           setAccessToken(response.data.tokens.accessToken)
 
           form.reset()

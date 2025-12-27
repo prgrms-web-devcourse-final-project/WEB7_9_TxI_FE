@@ -1,5 +1,6 @@
 import { userApi } from '@/api/user'
 import { useAuthStore } from '@/stores/authStore'
+import { useQueryClient } from '@tanstack/react-query'
 import { type ReactNode, useEffect } from 'react'
 import { Toaster } from 'sonner'
 import { ErrorBoundaryProvider } from './ErrorBoundaryProvider'
@@ -11,6 +12,7 @@ interface AppProviderProps {
 
 function AuthInitializer({ children }: { children: ReactNode }) {
   const { setUser, clearUser, accessToken, isAuthenticated } = useAuthStore()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -23,22 +25,24 @@ function AuthInitializer({ children }: { children: ReactNode }) {
         setUser(data)
       } catch {
         clearUser()
+        queryClient.clear()
       }
     }
 
     checkAuth()
-  }, [accessToken, isAuthenticated, setUser, clearUser])
+  }, [accessToken, isAuthenticated, setUser, clearUser, queryClient])
 
   useEffect(() => {
     const handleLogout = () => {
       clearUser()
+      queryClient.clear()
     }
 
     window.addEventListener('auth:logout', handleLogout)
     return () => {
       window.removeEventListener('auth:logout', handleLogout)
     }
-  }, [clearUser])
+  }, [clearUser, queryClient])
 
   return <>{children}</>
 }
