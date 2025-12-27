@@ -262,15 +262,14 @@ export default function QueuePage() {
         )}
       </main>
 
-      {/* 페이지 이탈 확인 모달 */}
       <ConfirmModal
         open={isExitConfirmModalOpen}
         onOpenChange={setIsExitConfirmModalOpen}
         onConfirm={handleExitConfirm}
         title="페이지를 나가시겠습니까?"
-        description="페이지를 나가면 대기 순번이 맨 뒤로 밀려납니다."
-        confirmText="나가기"
-        cancelText="머무르기"
+        description="나가시면 순번이 맨 뒤로 이동합니다. 그래도 나가시겠습니까?"
+        confirmText="네"
+        cancelText="아니요"
         variant="danger"
         isLoading={moveToBackMutation.isPending}
       />

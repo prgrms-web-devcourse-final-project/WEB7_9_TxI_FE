@@ -48,20 +48,20 @@ export function ConfirmModal({
         <div className="flex gap-3 pt-4">
           <Button
             type="button"
+            className={`flex-1 cursor-pointer ${variant === 'danger' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+            onClick={handleConfirm}
+            disabled={isLoading}
+          >
+            {isLoading ? '처리 중...' : confirmText}
+          </Button>
+          <Button
+            type="button"
             variant="outline"
             className="flex-1"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
             {cancelText}
-          </Button>
-          <Button
-            type="button"
-            className={`flex-1 cursor-pointer ${variant === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''}`}
-            onClick={handleConfirm}
-            disabled={isLoading}
-          >
-            {isLoading ? '처리 중...' : confirmText}
           </Button>
         </div>
       </DialogContent>

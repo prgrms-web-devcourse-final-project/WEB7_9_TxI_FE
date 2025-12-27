@@ -28,11 +28,15 @@ export function useQueueExitGuard({ eventId, enabled, onExitAttempt }: UseQueueE
     // 1. 브라우저 탭 닫기/새로고침 감지
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!handlersRegisteredRef.current) return
+      
       e.preventDefault()
-      const message =
-        '해당 페이지를 나가면 대기 순번이 맨 뒤로 밀려납니다.\n정말 나가시겠습니까?'
-      e.returnValue = message
-      return message
+      e.returnValue = ''
+      
+      // sendBeacon으로 순번 뒤로 보내기
+      const url = `${import.meta.env.VITE_API_BASE_URL}/queues/${eventId}/move-to-back`
+      navigator.sendBeacon(url, new Blob([JSON.stringify({})], { type: 'application/json' }))
+      
+      return ''
     }
 
     // 2. 브라우저 뒤로가기 감지
@@ -81,7 +85,7 @@ export function useQueueExitGuard({ eventId, enabled, onExitAttempt }: UseQueueE
       document.removeEventListener('click', handleClick, true)
       handlePopStateRef.current = null
     }
-  }, [enabled, onExitAttempt])
+  }, [enabled, onExitAttempt, eventId])
 
   const moveToBackAndNavigate = async () => {
     // 즉시 핸들러 비활성화 및 이벤트 리스너 제거
@@ -103,11 +107,9 @@ export function useQueueExitGuard({ eventId, enabled, onExitAttempt }: UseQueueE
       toast.error('순번 이동 처리 중 오류가 발생했습니다.')
     }
 
-    // API 호출 성공/실패 여부와 관계없이 네비게이션 실행
     setTimeout(() => {
       if (pendingNavigationRef.current) {
         if (pendingNavigationRef.current === 'back') {
-          // 이벤트 페이지로 직접 navigate
           navigate({ to: '/events' })
         } else {
           navigate({ to: pendingNavigationRef.current })
