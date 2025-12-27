@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
-import type { QueueExistsResponse, QueueStatusResponse } from '@/types/queue'
+import type { QueueExistsResponse, QueueStatusResponse, MoveToBackResponse} from '@/types/queue'
 
 export const queueApi = {
   getQueueStatus: async (eventId: string): Promise<ApiResponse<QueueStatusResponse>> => {
@@ -67,24 +67,10 @@ export const queueApi = {
     return response.data
   },
 
-  moveToBack: async (
-    eventId: string,
-  ): Promise<
-    ApiResponse<{
-      userId: number
-      previousRank: number
-      newRank: number
-      totalWaitingUsers: number
-    }>
-  > => {
-    const response = await apiClient.post<
-      ApiResponse<{
-        userId: number
-        previousRank: number
-        newRank: number
-        totalWaitingUsers: number
-      }>
-    >(`/queues/${eventId}/move-to-back`)
+  moveToBack: async (eventId: string): Promise<ApiResponse<MoveToBackResponse>> => {
+    const response = await apiClient.post<ApiResponse<MoveToBackResponse>>(
+      `/queues/${eventId}/move-to-back`,
+    )
 
     if (response.data.status === '400 BAD_REQUEST') {
       throw Error(response.data.message)
