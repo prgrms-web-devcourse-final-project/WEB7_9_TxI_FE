@@ -1,6 +1,6 @@
-import { ErrorBoundary } from 'react-error-boundary'
-import type { ReactNode } from 'react'
 import { ErrorFallback } from '@/components/common/ErrorFallback'
+import type { ReactNode } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 
 interface ErrorBoundaryProviderProps {
   children: ReactNode
@@ -8,7 +8,7 @@ interface ErrorBoundaryProviderProps {
 
 export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) {
   const handleError = (error: Error) => {
-    console.error('ErrorBoundary caught an error:', error)
+    console.error(error)
   }
 
   const handleReset = () => {

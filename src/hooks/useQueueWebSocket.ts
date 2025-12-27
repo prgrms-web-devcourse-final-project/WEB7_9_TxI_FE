@@ -28,25 +28,15 @@ export function useQueueWebSocket({ eventId, enabled = true }: UseQueueWebSocket
     const wsClient = getWebSocketClient(WS_URL, () => accessToken)
 
     const handleConnect = () => {
-      console.log('Queue WebSocket connected')
       setIsConnected(true)
 
       const personalDestination = `/topic/users/${userId}/queue`
       wsClient.subscribe(personalDestination, (message) => {
         try {
           const event: QueuePersonalEvent = JSON.parse(message.body)
-          console.log('Personal queue event received:', event)
           setPersonalEvent(event)
-
-          if ('enteredAt' in event) {
-            console.log('입장 완료:', event.message)
-          } else if ('expiredAt' in event) {
-            console.log('시간 만료:', event.message)
-          } else if ('completedAt' in event) {
-            console.log('결제 완료:', event.message)
-          }
         } catch (error) {
-          console.error('Failed to parse personal queue event:', error)
+          console.error(error)
         }
       })
 
@@ -54,23 +44,20 @@ export function useQueueWebSocket({ eventId, enabled = true }: UseQueueWebSocket
       wsClient.subscribe(queueDestination, (message) => {
         try {
           const updates: Record<string, WaitingQueueResponse> = JSON.parse(message.body)
-          console.log('Queue updates received:', updates)
 
           const myUpdate = updates[userId.toString()]
           if (myUpdate) {
             setQueuePosition(myUpdate.position)
             setEstimatedWaitTime(myUpdate.estimatedWaitTime)
             setProgress(myUpdate.progressPercentage)
-            console.log('My queue status updated:', myUpdate)
           }
         } catch (error) {
-          console.error('Failed to parse queue updates:', error)
+          console.error(error)
         }
       })
     }
 
-    const handleError = (error: Error) => {
-      console.error('Queue WebSocket error:', error)
+    const handleError = () => {
       setIsConnected(false)
     }
 
