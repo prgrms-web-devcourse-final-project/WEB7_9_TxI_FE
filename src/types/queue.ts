@@ -16,26 +16,34 @@ export interface QueueExistsResponse {
 
 export interface WaitingQueueResponse {
   userId: number
-  position: number
+  eventId: number
+  status: QueueStatus
+  queueRank: number
+  waitingAhead: number
   estimatedWaitTime: number
-  progressPercentage: number
+  progress: number
 }
 
 export interface EnteredQueueResponse {
   userId: number
+  eventId: number
+  status: 'ENTERED'
   enteredAt: string
+  expiredAt: string
   message: string
 }
 
 export interface ExpiredQueueResponse {
   userId: number
-  expiredAt: string
+  eventId: number
+  status: 'EXPIRED'
   message: string
 }
 
 export interface CompletedQueueResponse {
   userId: number
-  completedAt: string
+  eventId: number
+  status: 'COMPLETED'
   message: string
 }
 

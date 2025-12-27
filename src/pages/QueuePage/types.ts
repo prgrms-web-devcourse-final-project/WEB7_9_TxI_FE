@@ -11,6 +11,7 @@ export interface QueueHeaderProps {
 
 export interface WaitingStepProps {
   queuePosition: number
+  waitingAhead: number | null
   estimatedWaitTime: number
   progress: number
   isConnected: boolean

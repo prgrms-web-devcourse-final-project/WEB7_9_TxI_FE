@@ -12,6 +12,7 @@ interface UseQueueWebSocketParams {
 
 export function useQueueWebSocket({ eventId, enabled = true }: UseQueueWebSocketParams) {
   const [queuePosition, setQueuePosition] = useState<number | null>(null)
+  const [waitingAhead, setWaitingAhead] = useState<number | null>(null)
   const [estimatedWaitTime, setEstimatedWaitTime] = useState<number | null>(null)
   const [progress, setProgress] = useState<number>(0)
   const [personalEvent, setPersonalEvent] = useState<QueuePersonalEvent | null>(null)
@@ -58,9 +59,10 @@ export function useQueueWebSocket({ eventId, enabled = true }: UseQueueWebSocket
 
           const myUpdate = updates[userId.toString()]
           if (myUpdate) {
-            setQueuePosition(myUpdate.position)
+            setQueuePosition(myUpdate.queueRank)
+            setWaitingAhead(myUpdate.waitingAhead)
             setEstimatedWaitTime(myUpdate.estimatedWaitTime)
-            setProgress(myUpdate.progressPercentage)
+            setProgress(myUpdate.progress)
             console.log('My queue status updated:', myUpdate)
           }
         } catch (error) {
@@ -87,7 +89,8 @@ export function useQueueWebSocket({ eventId, enabled = true }: UseQueueWebSocket
   }
 
   return {
-    queuePosition,
+    queuePosition,      
+    waitingAhead,      
     estimatedWaitTime,
     progress,
     personalEvent,

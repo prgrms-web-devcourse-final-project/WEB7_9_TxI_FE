@@ -8,6 +8,7 @@ import type { WaitingStepProps } from '../types'
 
 export function WaitingStep({
   queuePosition,
+  waitingAhead,
   estimatedWaitTime,
   progress,
   isConnected,
@@ -81,7 +82,9 @@ export function WaitingStep({
               <Users className="w-8 h-8 text-blue-600" />
               <div>
                 <div className="text-sm text-gray-600">앞 대기 인원</div>
-                <div className="text-xl font-bold">{queuePosition.toLocaleString()}명</div>
+                <div className="text-xl font-bold">
+                  {waitingAhead !== null ? `${waitingAhead.toLocaleString()}명` : '-'}
+                </div>
               </div>
             </div>
           </div>

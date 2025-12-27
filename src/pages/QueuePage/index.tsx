@@ -62,6 +62,7 @@ export default function QueuePage() {
 
   const {
     queuePosition,
+    waitingAhead,
     estimatedWaitTime,
     progress,
     personalEvent,
@@ -182,6 +183,7 @@ export default function QueuePage() {
   }
 
   const currentPosition = queuePosition ?? queueData.data.queueRank
+  const currentWaitingAhead = waitingAhead ?? queueData.data.waitingAhead 
   const currentEstimatedTime = estimatedWaitTime ?? queueData.data.estimatedWaitTime
   const currentProgress = progress ?? queueData.data.progress
 
@@ -193,6 +195,7 @@ export default function QueuePage() {
         {step === 'waiting' && (
           <WaitingStep
             queuePosition={currentPosition}
+            waitingAhead={currentWaitingAhead}
             estimatedWaitTime={currentEstimatedTime}
             progress={currentProgress}
             isConnected={isConnected}
