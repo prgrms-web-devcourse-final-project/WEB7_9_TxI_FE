@@ -47,7 +47,16 @@ export interface CompletedQueueResponse {
   message: string
 }
 
+export interface MoveToBackResponse {
+  userId: number
+  previousRank: number
+  newRank: number
+  totalWaitingUsers: number
+}
+
 export type QueuePersonalEvent =
   | EnteredQueueResponse
   | ExpiredQueueResponse
   | CompletedQueueResponse
+
+
