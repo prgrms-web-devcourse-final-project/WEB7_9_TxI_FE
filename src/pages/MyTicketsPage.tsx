@@ -9,6 +9,7 @@ import { formatDateTime } from '@/utils/format'
 import { getTicketStatusBadgeClass } from '@/utils/getTicketStatusBadgeClass'
 import { getTicketStatusText } from '@/utils/getTicketStatusText'
 import { useSuspenseQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
   ArrowRight,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react'
 
 export default function MyTicketsPage() {
+  const navigate = useNavigate()
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
 
   const { data: preRegistersData } = useSuspenseQuery({
@@ -55,7 +57,13 @@ export default function MyTicketsPage() {
             ) : (
               <div className="grid lg:grid-cols-2 gap-6">
                 {preRegisters.map((preRegister) => (
-                  <Card key={preRegister.id} className="overflow-hidden">
+                  <Card
+                    key={preRegister.id}
+                    className="overflow-hidden cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg"
+                    onClick={() =>
+                      navigate({ to: '/events/$id', params: { id: String(preRegister.eventId) } })
+                    }
+                  >
                     <div className="relative h-48">
                       <img
                         src={preRegister.imageUrl}
