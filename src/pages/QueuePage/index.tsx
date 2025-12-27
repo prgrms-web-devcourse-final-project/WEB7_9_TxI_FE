@@ -4,7 +4,7 @@ import { queueApi } from '@/api/queue'
 import { seatsApi } from '@/api/seats'
 import { PaymentSuccessModal } from '@/components/PaymentSuccessModal'
 import { useQueueWebSocket } from '@/hooks/useQueueWebSocket'
-import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -23,11 +23,6 @@ export default function QueuePage() {
   const { data: queueData } = useSuspenseQuery({
     queryKey: ['queueStatus', id],
     queryFn: () => queueApi.getQueueStatus(id),
-  })
-
-  const { data: seatsData } = useSuspenseQuery({
-    queryKey: ['seats', id],
-    queryFn: () => seatsApi.getSeats(id),
   })
 
   const getInitialStep = (): QueueStep => {
@@ -49,6 +44,12 @@ export default function QueuePage() {
   }
 
   const [step, setStep] = useState<QueueStep>(getInitialStep())
+
+  const { data: seatsData } = useQuery({
+    queryKey: ['seats', id],
+    queryFn: () => seatsApi.getSeats(id),
+    enabled: step === 'purchase' || step === 'payment',
+  })
   const [selectedSeats, setSelectedSeats] = useState<number[]>([])
   const [selectedSection, setSelectedSection] = useState<string>('VIP')
   const [paymentMethod, setPaymentMethod] = useState('card')
@@ -115,6 +116,11 @@ export default function QueuePage() {
   const handlePurchase = async () => {
     if (selectedSeats.length === 0) {
       toast.error('좌석을 선택해주세요')
+      return
+    }
+
+    if (!seatsData?.data) {
+      toast.error('좌석 정보를 불러오는 중입니다')
       return
     }
 
