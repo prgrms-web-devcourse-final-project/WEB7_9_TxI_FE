@@ -1,4 +1,5 @@
 import { eventsApi } from '@/api/events'
+import { queueApi } from '@/api/queue'
 import { PreRegisterSuccessModal } from '@/components/PreRegisterSuccessModal'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -26,6 +27,8 @@ export default function EventDetailPage() {
     queryFn: () => eventsApi.getEventById(id),
   })
 
+  const event = data.data
+
   const { data: preRegisterCountData } = useSuspenseQuery({
     queryKey: ['event', id, 'pre-register-count'],
     queryFn: () => eventsApi.getPreRegisterCount(id),
@@ -37,6 +40,13 @@ export default function EventDetailPage() {
     enabled: isAuthenticated,
   })
 
+  const { data: queueStatusData } = useQuery({
+    queryKey: ['queueStatus', id],
+    queryFn: () => queueApi.getQueueStatus(id),
+    enabled: isAuthenticated && event.status === 'OPEN',
+    retry: false,
+  })
+
   const createPreRegisterMutation = useMutation({
     mutationFn: () => eventsApi.createPreRegister(id),
   })
@@ -45,7 +55,6 @@ export default function EventDetailPage() {
     mutationFn: () => eventsApi.deletePreRegister(id),
   })
 
-  const event = data.data
   const preRegisterCount = preRegisterCountData.data
 
   const isRegistered = preRegisterStatusData?.data ?? false
@@ -114,6 +123,13 @@ export default function EventDetailPage() {
         if (!registered) {
           return {
             text: '사전 등록 필요',
+            disabled: true,
+            onClick: () => {},
+          }
+        }
+        if (queueStatusData?.data?.status === 'COMPLETED') {
+          return {
+            text: '구매 완료',
             disabled: true,
             onClick: () => {},
           }
