@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/Card'
 import { Separator } from '@/components/ui/Separator'
 import { SeatMap } from '@/components/SeatMap'
 import { seatsApi } from '@/api/seats'
+import { useSeatWebSocket, applySeatChanges } from '@/hooks/useSeatWebSocket'
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { AlertCircle, ChevronRight, Users } from 'lucide-react'
 import { toast } from 'sonner'
@@ -23,9 +24,15 @@ export function PurchaseStep({
     queryFn: () => seatsApi.getSeats(eventId),
   })
 
-  const seats = seatsData.data
+  const { seatChanges } = useSeatWebSocket({
+    eventId: Number(eventId),
+    enabled: true,
+  })
 
-  const grades = Array.from(new Set(seats.map((seat) => seat.grade)))
+  const seats = seatsData.data
+  const updatedSeats = applySeatChanges(seats, seatChanges)
+
+  const grades = Array.from(new Set(updatedSeats.map((seat) => seat.grade)))
 
   const selectSeatMutation = useMutation({
     mutationFn: ({ seatId }: { seatId: string }) => seatsApi.selectSeat(eventId, seatId),
@@ -36,7 +43,7 @@ export function PurchaseStep({
   })
 
   const handleSeatClick = (seatId: number) => {
-    const seat = seats.find((s) => s.id === seatId)
+    const seat = updatedSeats.find((s) => s.id === seatId)
     if (!seat || seat.seatStatus !== 'AVAILABLE') return
 
     const isSelected = selectedSeats.includes(seatId)
@@ -55,7 +62,30 @@ export function PurchaseStep({
       )
     } else {
       if (selectedSeats.length >= 1) {
-        toast.error('최대 1석까지만 선택 가능합니다.')
+        const previousSeatId = selectedSeats[0]
+        deselectSeatMutation.mutate(
+          { seatId: String(previousSeatId) },
+          {
+            onSuccess: () => {
+              setSelectedSeats([])
+
+              selectSeatMutation.mutate(
+                { seatId: String(seatId) },
+                {
+                  onSuccess: () => {
+                    setSelectedSeats([seatId])
+                  },
+                  onError: (error) => {
+                    toast.error(error.message)
+                  },
+                },
+              )
+            },
+            onError: (error) => {
+              toast.error(error.message)
+            },
+          },
+        )
         return
       }
 
@@ -63,7 +93,7 @@ export function PurchaseStep({
         { seatId: String(seatId) },
         {
           onSuccess: () => {
-            setSelectedSeats((prev: number[]) => [...prev, seatId])
+            setSelectedSeats([seatId])
           },
           onError: (error) => {
             toast.error(error.message)
@@ -74,7 +104,7 @@ export function PurchaseStep({
   }
 
   const totalPrice = selectedSeats.reduce((sum, seatId) => {
-    const seat = seats.find((s) => s.id === seatId)
+    const seat = updatedSeats.find((s) => s.id === seatId)
     return sum + (seat?.price || 0)
   }, 0)
 
@@ -120,7 +150,7 @@ export function PurchaseStep({
           </Card>
 
           <SeatMap
-            seats={seats}
+            seats={updatedSeats}
             selectedGrade={selectedSection}
             selectedSeatIds={selectedSeats}
             onSeatClick={handleSeatClick}
@@ -144,7 +174,7 @@ export function PurchaseStep({
                 {selectedSeats.length > 0 ? (
                   <div className="space-y-2">
                     {selectedSeats.map((seatId) => {
-                      const seat = seats.find((s) => s.id === seatId)
+                      const seat = updatedSeats.find((s) => s.id === seatId)
                       if (!seat) return null
 
                       return (
