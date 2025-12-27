@@ -1,9 +1,9 @@
+import { queueApi } from '@/api/queue'
 import { Card } from '@/components/ui/Card'
 import { Progress } from '@/components/ui/Progress'
+import { useQueryClient } from '@tanstack/react-query'
 import { Clock, Loader2, TrendingUp, Users } from 'lucide-react'
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { queueApi } from '@/api/queue'
 import type { WaitingStepProps } from '../types'
 
 export function WaitingStep({
@@ -131,6 +131,7 @@ export function WaitingStep({
             </div>
           )}
           <button
+            type="button"
             onClick={handleProcessUntilMe}
             disabled={isProcessing}
             className="w-full py-3 px-4 bg-yellow-600 text-white rounded-lg font-semibold hover:bg-yellow-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
