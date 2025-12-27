@@ -29,14 +29,17 @@ export function useSeatWebSocket({ eventId, enabled = true }: UseSeatWebSocketPa
       const seatDestination = `/topic/events/${eventId}/seats`
       wsClient.subscribe(seatDestination, (message) => {
         try {
+          console.log('Seat WebSocket - Raw body:', message.body)
           const event: SeatStatusChangeEvent = JSON.parse(message.body)
+          console.log('Seat WebSocket - Parsed event:', event)
 
           setSeatChanges((prev) => {
             const updated = [event, ...prev]
             return updated.slice(0, 100)
           })
         } catch (error) {
-          throw new Error('Seat WebSocket error: ' + error)
+          console.error('Seat WebSocket parsing error:', error)
+          console.error('Seat WebSocket - Failed to parse body:', message.body)
         }
       })
     }
@@ -71,7 +74,16 @@ export function useSeatWebSocket({ eventId, enabled = true }: UseSeatWebSocketPa
 export function applySeatChanges(seats: Seat[], changes: SeatStatusChangeEvent[]): Seat[] {
   const updatedSeats = [...seats]
 
+  // 각 seatId의 최신 변경사항만 추출 (changes 배열의 첫 번째 = 최신)
+  const latestChanges = new Map<number, SeatStatusChangeEvent>()
   for (const change of changes) {
+    if (!latestChanges.has(change.seatId)) {
+      latestChanges.set(change.seatId, change)
+    }
+  }
+
+  // 최신 상태만 적용
+  for (const change of latestChanges.values()) {
     const seatIndex = updatedSeats.findIndex((seat) => seat.id === change.seatId)
     if (seatIndex !== -1) {
       updatedSeats[seatIndex] = {

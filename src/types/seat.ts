@@ -14,9 +14,10 @@ export interface SeatListResponse {
 }
 
 export interface SeatStatusChangeEvent {
+  eventId: number
   seatId: number
   seatCode: string
-  previousStatus: SeatStatus
   currentStatus: SeatStatus
-  updatedAt: string
+  price: number
+  grade: string
 }
