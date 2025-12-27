@@ -15,6 +15,8 @@ import { ReadyStep } from './components/ReadyStep'
 import { WaitingStep } from './components/WaitingStep'
 import { useQueueTimer } from './hooks/useQueueTimer'
 import type { QueueStep } from './types'
+import { ConfirmModal } from '@/components/ConfirmModal'
+import { useQueueExitGuard } from './hooks/useQueueExitGuard'
 
 export default function QueuePage() {
   const navigate = useNavigate()
@@ -59,6 +61,7 @@ export default function QueuePage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [orderData, setOrderData] = useState<CreateOrderResponse | null>(null)
   const [paymentResult, setPaymentResult] = useState<ConfirmPaymentResponse | null>(null)
+  const [isExitConfirmModalOpen, setIsExitConfirmModalOpen] = useState(false)
 
   const {
     queuePosition,
@@ -84,6 +87,24 @@ export default function QueuePage() {
   const confirmPaymentMutation = useMutation({
     mutationFn: orderApi.confirmPayment,
   })
+
+  const moveToBackMutation = useMutation({
+    mutationFn: () => queueApi.moveToBack(id),
+    onSuccess: () => {
+      setIsExitConfirmModalOpen(false)
+    },
+  })
+
+  // ready, purchase, payment 상태에서만 활성화 (결제 성공 모달 제외)
+  const { moveToBackAndNavigate } = useQueueExitGuard({
+    eventId: id,
+    enabled: (step === 'ready' || step === 'purchase' || step === 'payment') && !showSuccessModal,
+    onExitAttempt: () => setIsExitConfirmModalOpen(true),
+  })
+
+  const handleExitConfirm = async () => {
+    await moveToBackAndNavigate()
+  }
 
   useEffect(() => {
     const status = queueData.data.status
@@ -183,7 +204,7 @@ export default function QueuePage() {
   }
 
   const currentPosition = queuePosition ?? queueData.data.queueRank
-  const currentWaitingAhead = waitingAhead ?? queueData.data.waitingAhead 
+  const currentWaitingAhead = waitingAhead ?? queueData.data.waitingAhead
   const currentEstimatedTime = estimatedWaitTime ?? queueData.data.estimatedWaitTime
   const currentProgress = progress != null ? progress : queueData.data.progress
 
@@ -240,6 +261,19 @@ export default function QueuePage() {
           />
         )}
       </main>
+
+      {/* 페이지 이탈 확인 모달 */}
+      <ConfirmModal
+        open={isExitConfirmModalOpen}
+        onOpenChange={setIsExitConfirmModalOpen}
+        onConfirm={handleExitConfirm}
+        title="페이지를 나가시겠습니까?"
+        description="페이지를 나가면 대기 순번이 맨 뒤로 밀려납니다."
+        confirmText="나가기"
+        cancelText="머무르기"
+        variant="danger"
+        isLoading={moveToBackMutation.isPending}
+      />
 
       {showSuccessModal && paymentResult && (
         <PaymentSuccessModal
