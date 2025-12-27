@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'https://api.waitfair.shop/ws'
 const NOTIFICATION_DESTINATION = '/user/notifications'
+const MAX_NOTIFICATIONS = 20
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -36,8 +37,9 @@ export function useNotifications() {
         const response = await notificationApi.getNotifications()
         const notificationList = response.data.map(mapNotificationDTOToNotification)
 
-        setNotifications(notificationList)
-        setUnreadCount(notificationList.filter((n) => !n.read).length)
+        const limitedNotifications = notificationList.slice(0, MAX_NOTIFICATIONS)
+        setNotifications(limitedNotifications)
+        setUnreadCount(limitedNotifications.filter((n) => !n.read).length)
       } catch (err) {
         setError(err as Error)
       } finally {
@@ -49,11 +51,12 @@ export function useNotifications() {
           const notificationDTO: NotificationDTO = JSON.parse(message.body)
           const notification = mapNotificationDTOToNotification(notificationDTO)
 
-          setNotifications((prev) => [notification, ...prev])
+          setNotifications((prev) => {
+            const updated = [notification, ...prev].slice(0, MAX_NOTIFICATIONS)
 
-          if (!notification.read) {
-            setUnreadCount((prev) => prev + 1)
-          }
+            setUnreadCount(updated.filter((n) => !n.read).length)
+            return updated
+          })
         } catch (err) {
           setError(err as Error)
         }

@@ -1,5 +1,6 @@
 import { authApi } from '@/api/auth'
 import { userApi } from '@/api/user'
+import { ConfirmModal } from '@/components/ConfirmModal'
 import { PasswordConfirmModal } from '@/components/PasswordConfirmModal'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -23,6 +24,7 @@ export default function MyPage() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] = useState(false)
 
   const { data: userData } = useSuspenseQuery({
     queryKey: ['user', 'me'],
@@ -108,10 +110,11 @@ export default function MyPage() {
   }
 
   const handleDeleteClick = () => {
-    const confirmed = window.confirm('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')
-    if (confirmed) {
-      deleteMutation.mutate()
-    }
+    setIsDeleteConfirmModalOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    deleteMutation.mutate()
   }
 
   return (
@@ -177,7 +180,7 @@ export default function MyPage() {
                 validators={{
                   onChange: ({ value }) => {
                     const result = updateUserFormSchema.shape.fullName.safeParse(value)
-                    return result.success ? undefined : result.error.message
+                    return result.success ? undefined : result.error.issues[0]?.message
                   },
                 }}
               >
@@ -207,7 +210,7 @@ export default function MyPage() {
                 validators={{
                   onChange: ({ value }) => {
                     const result = updateUserFormSchema.shape.nickname.safeParse(value)
-                    return result.success ? undefined : result.error.message
+                    return result.success ? undefined : result.error.issues[0]?.message
                   },
                 }}
               >
@@ -229,7 +232,7 @@ export default function MyPage() {
                 validators={{
                   onChange: ({ value }) => {
                     const result = updateUserFormSchema.shape.birthDate.safeParse(value)
-                    return result.success ? undefined : result.error.message
+                    return result.success ? undefined : result.error.issues[0]?.message
                   },
                 }}
               >
@@ -323,6 +326,18 @@ export default function MyPage() {
         title="비밀번호 확인"
         description="정보 수정을 위해 비밀번호를 입력해주세요."
         isLoading={verifyPasswordMutation.isPending}
+      />
+
+      <ConfirmModal
+        open={isDeleteConfirmModalOpen}
+        onOpenChange={setIsDeleteConfirmModalOpen}
+        onConfirm={handleDeleteConfirm}
+        title="회원 탈퇴"
+        description="정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmText="탈퇴"
+        cancelText="취소"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
       />
     </div>
   )

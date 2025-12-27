@@ -27,7 +27,11 @@ export function Layout({ children }: LayoutProps) {
         </ErrorBoundary>
       </main>
       <Footer />
-      <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
+      <LoginModal
+        open={isLoginModalOpen}
+        onOpenChange={setIsLoginModalOpen}
+        onOpenSignupChange={setIsSignupModalOpen}
+      />
       <SignupModal
         open={isSignupModalOpen}
         onOpenChange={setIsSignupModalOpen}

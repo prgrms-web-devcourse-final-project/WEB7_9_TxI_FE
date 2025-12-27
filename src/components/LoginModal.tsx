@@ -20,9 +20,10 @@ import { toast } from 'sonner'
 interface LoginModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onOpenSignupChange: (open: boolean) => void
 }
 
-export function LoginModal({ open, onOpenChange }: LoginModalProps) {
+export function LoginModal({ open, onOpenChange, onOpenSignupChange }: LoginModalProps) {
   const { setUser, setAccessToken } = useAuthStore()
 
   const loginMutation = useMutation({
@@ -147,7 +148,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
             className="text-blue-600 hover:underline font-medium"
             onClick={() => {
               onOpenChange(false)
-              window.dispatchEvent(new CustomEvent('openSignupModal'))
+              onOpenSignupChange(true)
             }}
           >
             회원가입

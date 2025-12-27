@@ -1,4 +1,5 @@
 import { authApi } from '@/api/auth'
+import { userApi } from '@/api/user'
 import { Button } from '@/components/ui/Button'
 import {
   Dialog,
@@ -9,6 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/Dialog'
 import { Input } from '@/components/ui/Input'
+import { useAuthStore } from '@/stores/authStore'
 import type { SignupRequest } from '@/types/auth'
 import { signupFormSchema } from '@/utils/validation'
 import { useForm } from '@tanstack/react-form'
@@ -22,6 +24,8 @@ interface Props {
 }
 
 export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
+  const { setUser, setAccessToken } = useAuthStore()
+
   const signupMutation = useMutation({
     mutationFn: authApi.signup,
   })
@@ -49,10 +53,26 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
       }
 
       signupMutation.mutate(signupData, {
-        onSuccess: () => {
-          toast.success('회원가입이 완료되었습니다. 로그인해주세요.')
-          form.reset()
-          onOpenChange(false)
+        onSuccess: async () => {
+          try {
+            const loginResponse = await authApi.login({
+              email: value.email,
+              password: value.password,
+            })
+            setAccessToken(loginResponse.data.tokens.accessToken)
+
+            const userResponse = await userApi.getUserProfile()
+            setUser(userResponse.data)
+
+            toast.success('회원가입이 완료되어 자동 로그인되었습니다.')
+            form.reset()
+            onOpenChange(false)
+          } catch {
+            toast.error('수동으로 로그인해주세요')
+            form.reset()
+            onOpenChange(false)
+            onOpenLoginChange(true)
+          }
         },
         onError: (error: Error) => {
           toast.error(error.message)
