@@ -50,6 +50,10 @@ export function ReadyStep({ minutes, seconds, onEnter }: ReadyStepProps) {
           </li>
           <li className="flex items-start gap-2">
             <CheckCircle2 className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+            <span>결제 완료 전에 페이지를 새로고침하거나 창을 나가면 대기 순번이 맨 뒤로 밀려납니다.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
             <span>1인당 최대 1매까지 구매 가능합니다</span>
           </li>
         </ul>
