@@ -2,6 +2,15 @@ import { apiClient } from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
 import type { Event, GetEventsParams, PageResponse } from '@/types/event'
 import type { PreRegister } from '@/types/preRegister'
+import { getReCaptchaToken } from '@/utils/recaptcha'
+
+export interface PreRegisterCreateRequest {
+  fullName: string
+  phoneNumber: string
+  birthDate: string
+  agreeTerms: boolean
+  agreePrivacy: boolean
+}
 
 export const eventsApi = {
   getEvents: async (params: GetEventsParams): Promise<ApiResponse<PageResponse<Event>>> => {
@@ -81,9 +90,21 @@ export const eventsApi = {
     return response.data
   },
 
-  createPreRegister: async (eventId: string): Promise<ApiResponse<PreRegister>> => {
+  createPreRegister: async (
+    eventId: string,
+    data: PreRegisterCreateRequest,
+  ): Promise<ApiResponse<PreRegister>> => {
+    // reCAPTCHA v3 토큰 발급
+    const recaptchaToken = await getReCaptchaToken('pre_register')
+
     const response = await apiClient.post<ApiResponse<PreRegister>>(
       `/events/${eventId}/pre-registers`,
+      data, // 이름, 휴대폰 번호, 생년월일, 약관 동의 정보 전송
+      {
+        headers: {
+          'X-Recaptcha-Token': recaptchaToken,
+        },
+      },
     )
 
     if (response.data.status === '400 BAD_REQUEST') {
