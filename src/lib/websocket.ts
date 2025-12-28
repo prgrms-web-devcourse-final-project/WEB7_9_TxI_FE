@@ -49,6 +49,9 @@ export class WebSocketClient {
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
+      debug: (str) => {
+        console.log('STOMP Debug:', str)
+      },
       reconnectDelay: 0,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -62,7 +65,8 @@ export class WebSocketClient {
         const error = new Error(frame.headers.message || 'STOMP error')
         this.triggerErrorCallbacks(error)
       },
-      onWebSocketError: () => {
+      onWebSocketError: (event) => {
+        console.error(event)
         this.isConnecting = false
         const error = new Error('WebSocket connection failed')
         this.triggerErrorCallbacks(error)

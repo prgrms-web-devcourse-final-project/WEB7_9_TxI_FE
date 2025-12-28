@@ -36,13 +36,13 @@ export function useSeatWebSocket({ eventId, enabled = true }: UseSeatWebSocketPa
             return updated.slice(0, 100)
           })
         } catch (error) {
-          throw new Error('Seat WebSocket error: ' + error)
+          console.error(error)
         }
       })
     }
 
     const handleError = (error: Error) => {
-      throw new Error('Seat WebSocket error: ' + error.message)
+      throw new Error(error.message)
     }
 
     wsClient.connect(handleConnect, handleError)
@@ -71,7 +71,14 @@ export function useSeatWebSocket({ eventId, enabled = true }: UseSeatWebSocketPa
 export function applySeatChanges(seats: Seat[], changes: SeatStatusChangeEvent[]): Seat[] {
   const updatedSeats = [...seats]
 
+  const latestChanges = new Map<number, SeatStatusChangeEvent>()
   for (const change of changes) {
+    if (!latestChanges.has(change.seatId)) {
+      latestChanges.set(change.seatId, change)
+    }
+  }
+
+  for (const change of latestChanges.values()) {
     const seatIndex = updatedSeats.findIndex((seat) => seat.id === change.seatId)
     if (seatIndex !== -1) {
       updatedSeats[seatIndex] = {

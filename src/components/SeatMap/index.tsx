@@ -40,9 +40,6 @@ export function SeatMap({
   const handleSeatClick = (seatId: number, seatStatus: string) => {
     if (seatStatus !== 'AVAILABLE') return
 
-    const isSelected = selectedSeatIds.includes(seatId)
-    if (!isSelected && selectedSeatIds.length >= maxSeats) return
-
     onSeatClick(seatId)
   }
 
