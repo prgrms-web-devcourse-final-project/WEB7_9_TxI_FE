@@ -35,11 +35,7 @@ export function useQueueExitGuard({
     if (handlersRegisteredRef.current) return
     handlersRegisteredRef.current = true
 
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!handlersRegisteredRef.current) return
-
-      e.preventDefault()
-
+    const callMoveToBackApi = () => {
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://api.waitfair.shop/api/v1'
       const url = `${baseURL}/queues/${eventId}/move-to-back`
 
@@ -53,10 +49,22 @@ export function useQueueExitGuard({
         keepalive: true,
         credentials: 'include',
       }).catch((error) => {
-        console.error(error)
+        console.error('Failed to move to back:', error)
       })
+    }
 
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!handlersRegisteredRef.current) return
+      e.preventDefault()
       return ''
+    }
+
+    const handlePageHide = (e: PageTransitionEvent) => {
+      if (!handlersRegisteredRef.current) return
+      
+      if (!e.persisted) {
+        callMoveToBackApi()
+      }
     }
 
     const handlePopState = () => {
@@ -92,6 +100,7 @@ export function useQueueExitGuard({
 
     window.history.pushState(null, '', window.location.pathname)
     window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('pagehide', handlePageHide)
     window.addEventListener('popstate', handlePopState)
     document.addEventListener('click', handleClick, true)
 
@@ -99,6 +108,7 @@ export function useQueueExitGuard({
       handlersRegisteredRef.current = false
       window.removeEventListener('beforeunload', handleBeforeUnload)
       window.removeEventListener('popstate', handlePopState)
+      window.removeEventListener('pagehide', handlePageHide)
       document.removeEventListener('click', handleClick, true)
       handlePopStateRef.current = null
     }
