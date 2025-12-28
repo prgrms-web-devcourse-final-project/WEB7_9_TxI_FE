@@ -5,5 +5,4 @@ export interface SeatMapProps {
   selectedGrade: string
   selectedSeatIds: number[]
   onSeatClick: (seatId: number) => void
-  maxSeats?: number
 }

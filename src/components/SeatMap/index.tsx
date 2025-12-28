@@ -7,7 +7,6 @@ export function SeatMap({
   selectedGrade,
   selectedSeatIds,
   onSeatClick,
-  maxSeats = 1,
 }: SeatMapProps) {
   const gradeSeats = seats.filter((seat) => seat.grade === selectedGrade)
 

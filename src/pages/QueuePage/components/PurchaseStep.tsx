@@ -154,7 +154,6 @@ export function PurchaseStep({
             selectedGrade={selectedSection}
             selectedSeatIds={selectedSeats}
             onSeatClick={handleSeatClick}
-            maxSeats={1}
           />
         </div>
 
