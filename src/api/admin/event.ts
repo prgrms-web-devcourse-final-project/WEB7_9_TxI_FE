@@ -7,7 +7,7 @@ import type {
   AdminEventDashboardResponse,
 } from '@/types/admin/event'
 
-const BASE_URL = '/api/v1/admin/events'
+const BASE_URL = '/admin/events'
 
 export const adminEventsApi = {
   createEvent: async (
