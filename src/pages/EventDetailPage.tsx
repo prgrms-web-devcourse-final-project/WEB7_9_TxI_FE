@@ -134,6 +134,13 @@ export default function EventDetailPage() {
             onClick: () => {},
           }
         }
+        if (queueStatusData?.data?.status === 'EXPIRED') {
+          return {
+            text: '티켓팅 기간 만료',
+            disabled: true,
+            onClick: () => {},
+          }
+        }
         return {
           text: '티켓팅 입장',
           disabled: false,

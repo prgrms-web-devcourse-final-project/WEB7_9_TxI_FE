@@ -76,7 +76,7 @@ export default function QueuePage() {
     enabled: true,
   })
 
-  const { minutes, seconds, start } = useQueueTimer(900, () => {
+  const { minutes, seconds, start, isRunning } = useQueueTimer(900, () => {
     navigate({ to: '/events' })
   })
 
@@ -93,6 +93,12 @@ export default function QueuePage() {
     enabled: (step === 'ready' || step === 'purchase' || step === 'payment') && !showSuccessModal,
     onExitAttempt: () => setIsExitConfirmModalOpen(true),
   })
+
+  useEffect(() => {
+    if ((step === 'ready' || step === 'purchase' || step === 'payment') && !isRunning) {
+      start()
+    }
+  }, [step, isRunning, start])
 
   useEffect(() => {
     const status = queueData.data.status
