@@ -11,6 +11,8 @@ import { Route as myPageRoute } from "./routes/my-page";
 import { Route as adminRoute } from "./routes/admin";
 import { Route as adminQueueRoute } from "./routes/admin/queue.$eventId";
 import { Route as adminSeatsRoute } from "./routes/admin/seats.$eventId";
+import { Route as adminEventRoute } from "./routes/admin/events.$eventId";
+import { Route as adminEventEditRoute } from "./routes/admin/events.$eventId.edit";
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -24,6 +26,8 @@ const routeTree = rootRoute.addChildren([
   adminRoute,
   adminQueueRoute,
   adminSeatsRoute,
+  adminEventRoute,
+  adminEventEditRoute,
 ]);
 
 export const router = createRouter({ routeTree });

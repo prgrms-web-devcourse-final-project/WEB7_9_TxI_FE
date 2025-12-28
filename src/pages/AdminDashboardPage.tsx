@@ -1,4 +1,4 @@
-import { adminEventsApi } from '@/api/admin/event'
+import { adminEventsApi } from '@/api/admin/events'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -199,10 +199,11 @@ export default function AdminDashboardPage() {
                     </div>
 
                     <div className="flex gap-2 mt-4">
-                      {/* TODO: 이벤트 관리 페이지 라우트 추가 후 활성화 */}
-                      {/* <Button variant="outline" size="sm" className="flex-1" asChild>
-                        <Link to="/admin/events">이벤트 관리</Link>
-                      </Button> */}
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link to="/admin/events/$eventId" params={{ eventId: String(event.eventId) }}>
+                          이벤트 관리
+                        </Link>
+                      </Button>
                       <Button variant="outline" size="sm" className="flex-1" asChild>
                         <Link to="/admin/queue/$eventId" params={{ eventId: String(event.eventId) }}>
                           대기열 관리

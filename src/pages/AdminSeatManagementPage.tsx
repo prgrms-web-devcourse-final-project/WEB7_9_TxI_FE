@@ -34,7 +34,6 @@ export default function AdminSeatManagementPage() {
   const userRole = getRoleFromToken(accessToken)
   const isAdmin = userRole === 'ADMIN'
 
-  // accessToken이 있으면 인증된 것으로 간주 (로그인 직후 상태 업데이트 지연 대응)
   const hasAuth = isAuthenticated || !!accessToken
 
   const [editingSeat, setEditingSeat] = useState<number | null>(null)
@@ -45,7 +44,6 @@ export default function AdminSeatManagementPage() {
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false)
   const [selectedSeatId, setSelectedSeatId] = useState<number | null>(null)
 
-  // Bulk create form
   const [bulkSeats, setBulkSeats] = useState('')
 
   // Auto create form
@@ -462,25 +460,23 @@ export default function AdminSeatManagementPage() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr className="border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">좌석 코드</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">등급</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">가격</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">상태</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold">작업</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold"> </th>
                 </tr>
               </thead>
               <tbody>
                 {seats.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
                       등록된 좌석이 없습니다.
                     </td>
                   </tr>
                 ) : (
                   seats.map((seat) => (
                     <tr key={seat.id} className="border-b border-gray-200 hover:bg-gray-50">
-                      <td className="px-4 py-3">{seat.id}</td>
                       <td className="px-4 py-3">
                         {editingSeat === seat.id ? (
                           <Input
