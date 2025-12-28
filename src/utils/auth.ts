@@ -18,3 +18,23 @@ export function requireAuth(location: { pathname: string }) {
     throw redirect({ to: '/' })
   }
 }
+
+/**
+ * JWT 토큰에서 Role을 추출합니다.
+ * @param token JWT 토큰 문자열
+ * @returns Role 문자열 또는 null
+ */
+export function getRoleFromToken(token: string | null): string | null {
+  if (!token) return null
+
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+
+    const payload = parts[1]
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
+    return decoded.role || decoded.Role || null
+  } catch {
+    return null
+  }
+}
