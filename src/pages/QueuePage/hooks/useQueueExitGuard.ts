@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { queueApi } from '@/api/queue'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
+import { useAuthStore } from '@/stores/authStore'
 
 interface UseQueueExitGuardParams {
   eventId: string
@@ -9,12 +10,21 @@ interface UseQueueExitGuardParams {
   onExitAttempt: () => void
 }
 
-export function useQueueExitGuard({ eventId, enabled, onExitAttempt }: UseQueueExitGuardParams) {
+interface UseQueueExitGuardReturn {
+  moveToBackAndNavigate: () => Promise<void>
+}
+
+export function useQueueExitGuard({
+  eventId,
+  enabled,
+  onExitAttempt,
+}: UseQueueExitGuardParams): UseQueueExitGuardReturn {
   const navigate = useNavigate()
+  const { accessToken } = useAuthStore()
   const pendingNavigationRef = useRef<string | null>(null)
   const isNavigatingRef = useRef(false)
   const handlersRegisteredRef = useRef(false)
-  const handlePopStateRef = useRef<((e: PopStateEvent) => void) | null>(null) // 추가
+  const handlePopStateRef = useRef<((e: PopStateEvent) => void) | null>(null)
 
   useEffect(() => {
     if (!enabled) {
@@ -25,32 +35,40 @@ export function useQueueExitGuard({ eventId, enabled, onExitAttempt }: UseQueueE
     if (handlersRegisteredRef.current) return
     handlersRegisteredRef.current = true
 
-    // 1. 브라우저 탭 닫기/새로고침 감지
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!handlersRegisteredRef.current) return
-      
+
       e.preventDefault()
-      e.returnValue = ''
-      
-      // sendBeacon으로 순번 뒤로 보내기
-      const url = `${import.meta.env.VITE_API_BASE_URL}/queues/${eventId}/move-to-back`
-      navigator.sendBeacon(url, new Blob([JSON.stringify({})], { type: 'application/json' }))
-      
+
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://api.waitfair.shop/api/v1'
+      const url = `${baseURL}/queues/${eventId}/move-to-back`
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+        body: JSON.stringify({}),
+        keepalive: true,
+        credentials: 'include',
+      }).catch((error) => {
+        console.error(error)
+      })
+
       return ''
     }
 
-    // 2. 브라우저 뒤로가기 감지
     const handlePopState = () => {
       if (!handlersRegisteredRef.current || isNavigatingRef.current) return
-      
+
       pendingNavigationRef.current = 'back'
       onExitAttempt()
       window.history.pushState(null, '', window.location.pathname)
     }
-    
-    handlePopStateRef.current = handlePopState // 참조 저장
 
-    // 3. 모든 링크 클릭 감지
+    handlePopStateRef.current = handlePopState
+
     const handleClick = (e: MouseEvent) => {
       if (!handlersRegisteredRef.current || isNavigatingRef.current) return
 
@@ -62,11 +80,10 @@ export function useQueueExitGuard({ eventId, enabled, onExitAttempt }: UseQueueE
         const linkUrl = new URL(link.href, window.location.origin)
         const linkPath = linkUrl.pathname
 
-        // 같은 페이지가 아닌 경우에만 차단
         if (linkPath !== currentPath) {
           e.preventDefault()
           e.stopPropagation()
-          
+
           pendingNavigationRef.current = linkPath
           onExitAttempt()
         }
@@ -85,26 +102,23 @@ export function useQueueExitGuard({ eventId, enabled, onExitAttempt }: UseQueueE
       document.removeEventListener('click', handleClick, true)
       handlePopStateRef.current = null
     }
-  }, [enabled, onExitAttempt, eventId])
+  }, [enabled, onExitAttempt, eventId, accessToken])
 
   const moveToBackAndNavigate = async () => {
-    // 즉시 핸들러 비활성화 및 이벤트 리스너 제거
     isNavigatingRef.current = true
     handlersRegisteredRef.current = false
-    
-    // popstate 이벤트 리스너 즉시 제거
+
     if (handlePopStateRef.current) {
       window.removeEventListener('popstate', handlePopStateRef.current)
     }
-    
+
     try {
       const response = await queueApi.moveToBack(eventId)
       toast.info('대기 순번이 맨 뒤로 이동되었습니다.', {
         description: `${response.data.previousRank}번 → ${response.data.newRank}번`,
       })
     } catch (error) {
-      console.error('Failed to move to back:', error)
-      toast.error('순번 이동 처리 중 오류가 발생했습니다.')
+      console.error(error)
     }
 
     setTimeout(() => {

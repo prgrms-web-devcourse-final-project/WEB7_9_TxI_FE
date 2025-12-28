@@ -88,23 +88,11 @@ export default function QueuePage() {
     mutationFn: orderApi.confirmPayment,
   })
 
-  const moveToBackMutation = useMutation({
-    mutationFn: () => queueApi.moveToBack(id),
-    onSuccess: () => {
-      setIsExitConfirmModalOpen(false)
-    },
-  })
-
-  // ready, purchase, payment 상태에서만 활성화 (결제 성공 모달 제외)
   const { moveToBackAndNavigate } = useQueueExitGuard({
     eventId: id,
     enabled: (step === 'ready' || step === 'purchase' || step === 'payment') && !showSuccessModal,
     onExitAttempt: () => setIsExitConfirmModalOpen(true),
   })
-
-  const handleExitConfirm = async () => {
-    await moveToBackAndNavigate()
-  }
 
   useEffect(() => {
     const status = queueData.data.status
@@ -265,13 +253,15 @@ export default function QueuePage() {
       <ConfirmModal
         open={isExitConfirmModalOpen}
         onOpenChange={setIsExitConfirmModalOpen}
-        onConfirm={handleExitConfirm}
+        onConfirm={async () => {
+          await moveToBackAndNavigate()
+          setIsExitConfirmModalOpen(false)
+        }}
         title="페이지를 나가시겠습니까?"
         description="나가시면 순번이 맨 뒤로 이동합니다. 그래도 나가시겠습니까?"
         confirmText="네"
         cancelText="아니요"
         variant="danger"
-        isLoading={moveToBackMutation.isPending}
       />
 
       {showSuccessModal && paymentResult && (
