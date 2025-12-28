@@ -49,7 +49,7 @@ export function useQueueExitGuard({
         keepalive: true,
         credentials: 'include',
       }).catch((error) => {
-        console.error('Failed to move to back:', error)
+        console.error(error)
       })
     }
 
