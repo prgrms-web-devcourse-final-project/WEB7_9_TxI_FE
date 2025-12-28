@@ -47,10 +47,6 @@ export default function EventDetailPage() {
     retry: false,
   })
 
-  const createPreRegisterMutation = useMutation({
-    mutationFn: () => eventsApi.createPreRegister(id),
-  })
-
   const deletePreRegisterMutation = useMutation({
     mutationFn: () => eventsApi.deletePreRegister(id),
   })
@@ -70,6 +66,7 @@ export default function EventDetailPage() {
     }
 
     if (isRegistered) {
+      // 이미 등록한 경우 - 취소
       deletePreRegisterMutation.mutate(undefined, {
         onSuccess: () => {
           toast.success('사전 등록이 취소되었습니다.')
@@ -81,16 +78,8 @@ export default function EventDetailPage() {
         },
       })
     } else {
-      createPreRegisterMutation.mutate(undefined, {
-        onSuccess: () => {
-          setIsSuccessModalOpen(true)
-          queryClient.invalidateQueries({ queryKey: ['event', id, 'pre-register-status'] })
-          queryClient.invalidateQueries({ queryKey: ['event', id, 'pre-register-count'] })
-        },
-        onError: (error) => {
-          toast.error(error.message)
-        },
-      })
+      // 등록하지 않은 경우 - 사전등록 페이지로 이동
+      navigate({ to: `/events/${id}/register` })
     }
   }
 
@@ -109,7 +98,7 @@ export default function EventDetailPage() {
       case 'PRE_OPEN':
         return {
           text: registered ? '사전등록 취소' : '사전 등록하기',
-          disabled: createPreRegisterMutation.isPending || deletePreRegisterMutation.isPending,
+          disabled: deletePreRegisterMutation.isPending,
           onClick: handlePreRegister,
         }
       case 'PRE_CLOSED':
@@ -256,9 +245,7 @@ export default function EventDetailPage() {
                 onClick={buttonConfig.onClick}
                 disabled={buttonConfig.disabled}
               >
-                {createPreRegisterMutation.isPending || deletePreRegisterMutation.isPending
-                  ? '처리 중...'
-                  : buttonConfig.text}
+                {deletePreRegisterMutation.isPending ? '처리 중...' : buttonConfig.text}
               </Button>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
