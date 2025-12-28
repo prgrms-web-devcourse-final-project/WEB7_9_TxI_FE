@@ -15,6 +15,8 @@ import { ReadyStep } from './components/ReadyStep'
 import { WaitingStep } from './components/WaitingStep'
 import { useQueueTimer } from './hooks/useQueueTimer'
 import type { QueueStep } from './types'
+import { ConfirmModal } from '@/components/ConfirmModal'
+import { useQueueExitGuard } from './hooks/useQueueExitGuard'
 
 export default function QueuePage() {
   const navigate = useNavigate()
@@ -59,6 +61,7 @@ export default function QueuePage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [orderData, setOrderData] = useState<CreateOrderResponse | null>(null)
   const [paymentResult, setPaymentResult] = useState<ConfirmPaymentResponse | null>(null)
+  const [isExitConfirmModalOpen, setIsExitConfirmModalOpen] = useState(false)
 
   const {
     queuePosition,
@@ -83,6 +86,12 @@ export default function QueuePage() {
 
   const confirmPaymentMutation = useMutation({
     mutationFn: orderApi.confirmPayment,
+  })
+
+  const { moveToBackAndNavigate } = useQueueExitGuard({
+    eventId: id,
+    enabled: (step === 'ready' || step === 'purchase' || step === 'payment') && !showSuccessModal,
+    onExitAttempt: () => setIsExitConfirmModalOpen(true),
   })
 
   useEffect(() => {
@@ -183,7 +192,7 @@ export default function QueuePage() {
   }
 
   const currentPosition = queuePosition ?? queueData.data.queueRank
-  const currentWaitingAhead = waitingAhead ?? queueData.data.waitingAhead 
+  const currentWaitingAhead = waitingAhead ?? queueData.data.waitingAhead
   const currentEstimatedTime = estimatedWaitTime ?? queueData.data.estimatedWaitTime
   const currentProgress = progress != null ? progress : queueData.data.progress
 
@@ -240,6 +249,20 @@ export default function QueuePage() {
           />
         )}
       </main>
+
+      <ConfirmModal
+        open={isExitConfirmModalOpen}
+        onOpenChange={setIsExitConfirmModalOpen}
+        onConfirm={async () => {
+          await moveToBackAndNavigate()
+          setIsExitConfirmModalOpen(false)
+        }}
+        title="페이지를 나가시겠습니까?"
+        description="나가시면 순번이 맨 뒤로 이동합니다. 그래도 나가시겠습니까?"
+        confirmText="네"
+        cancelText="아니요"
+        variant="danger"
+      />
 
       {showSuccessModal && paymentResult && (
         <PaymentSuccessModal
