@@ -49,10 +49,12 @@ export function Header({ onLoginClick, onSignupClick }: HeaderProps) {
     logoutMutation.mutate()
   }
 
+  const isAdminPage = currentPath.startsWith('/admin')
+
   return (
     <header className="border-b border-gray-200 bg-white/95 backdrop-blur sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to={isAdminPage ? '/admin' : '/'} className="flex items-center gap-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <Ticket className="w-5 h-5 text-white" />
           </div>

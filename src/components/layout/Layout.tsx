@@ -4,6 +4,7 @@ import { PageErrorFallback } from '@/components/common/ErrorFallback'
 import { LoadingFallback } from '@/components/common/LoadingFallback'
 import { type ReactNode, Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
+import { useRouterState } from '@tanstack/react-router'
 import { Footer } from './Footer'
 import { Header } from './Header'
 
@@ -14,6 +15,10 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
+  const router = useRouterState()
+  const currentPath = router.location.pathname
+  
+  const isAdminPage = currentPath.startsWith('/admin')
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -26,7 +31,7 @@ export function Layout({ children }: LayoutProps) {
           <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
         </ErrorBoundary>
       </main>
-      <Footer />
+      {!isAdminPage && <Footer />}
       <LoginModal
         open={isLoginModalOpen}
         onOpenChange={setIsLoginModalOpen}

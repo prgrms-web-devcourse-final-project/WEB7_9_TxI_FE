@@ -8,7 +8,7 @@ import type {
   SeatUpdateRequest,
 } from '@/types/admin/seat'
 
-const BASE_URL = '/api/v1/admin/events'
+const BASE_URL = '/admin/events'
 
 export const adminSeatsApi = {
   bulkCreateSeats: async (
@@ -135,6 +135,20 @@ export const adminSeatsApi = {
     )
 
     if (response.data.status === '404 NOT_FOUND') {
+      throw Error(response.data.message)
+    }
+
+    if (response.data.status === '500 INTERNAL_SERVER_ERROR') {
+      throw Error(response.data.message)
+    }
+
+    return response.data
+  },
+
+  getSeatsByEvent: async (eventId: string): Promise<ApiResponse<Seat[]>> => {
+    const response = await apiClient.get<ApiResponse<Seat[]>>(`${BASE_URL}/${eventId}/seats`)
+
+    if (response.data.status === '400 BAD_REQUEST') {
       throw Error(response.data.message)
     }
 
