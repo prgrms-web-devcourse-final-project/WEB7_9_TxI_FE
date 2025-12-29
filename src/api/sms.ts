@@ -10,6 +10,10 @@ export interface SmsVerifyRequest {
   verificationCode: string
 }
 
+export interface SmsSendResponse {
+  expiresInSeconds: number
+}
+
 export interface SmsVerifyResponse {
   verified: boolean
 }
@@ -18,8 +22,8 @@ export const smsApi = {
   /**
    * SMS 인증번호 발송
    */
-  sendVerificationCode: async (phoneNumber: string): Promise<ApiResponse<void>> => {
-    const response = await apiClient.post<ApiResponse<void>>('/sms/send', {
+  sendVerificationCode: async (phoneNumber: string): Promise<ApiResponse<SmsSendResponse>> => {
+    const response = await apiClient.post<ApiResponse<SmsSendResponse>>('/sms/send', {
       phoneNumber,
     })
     return response.data

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/Label'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { ArrowLeft, CheckCircle2, Shield } from 'lucide-react'
 import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { eventsApi } from '@/api/events'
 import { smsApi } from '@/api/sms'
@@ -30,6 +30,49 @@ export default function PreRegistrationPage() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [showVerificationInput, setShowVerificationInput] = useState(false)
+  const [timeLeft, setTimeLeft] = useState<number>(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // 타이머 정리 함수
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
+
+  // 카운트다운 타이머
+  useEffect(() => {
+    if (timeLeft > 0 && !isVerified) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            if (timerRef.current) {
+              clearInterval(timerRef.current)
+            }
+            toast.error('인증 시간이 만료되었습니다. 다시 시도해주세요.')
+            setShowVerificationInput(false)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current)
+        }
+      }
+    }
+  }, [timeLeft, isVerified])
+
+  // 시간을 mm:ss 형식으로 변환
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   // SMS 인증번호 발송
   const handleSendSms = async () => {
@@ -41,9 +84,14 @@ export default function PreRegistrationPage() {
     setIsSendingSms(true)
 
     try {
-      await smsApi.sendVerificationCode(formData.phoneNumber)
+      const response = await smsApi.sendVerificationCode(formData.phoneNumber)
       toast.success('인증번호가 발송되었습니다.')
       setShowVerificationInput(true)
+
+      // 타이머 시작
+      if (response.data?.expiresInSeconds) {
+        setTimeLeft(response.data.expiresInSeconds)
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '인증번호 발송에 실패했습니다.'
       toast.error(errorMessage)
@@ -65,6 +113,12 @@ export default function PreRegistrationPage() {
       await smsApi.verifyCode(formData.phoneNumber, formData.verificationCode)
       toast.success('본인 인증이 완료되었습니다.')
       setIsVerified(true)
+
+      // 타이머 중지
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+      setTimeLeft(0)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '인증번호가 일치하지 않습니다.'
       toast.error(errorMessage)
@@ -256,13 +310,18 @@ export default function PreRegistrationPage() {
                   <Button
                     type="button"
                     onClick={handleVerifySms}
-                    disabled={isVerifying || !formData.verificationCode}
+                    disabled={isVerifying || !formData.verificationCode || timeLeft === 0}
                     variant="outline"
                     className="whitespace-nowrap"
                   >
                     {isVerifying ? '확인 중...' : '확인'}
                   </Button>
                 </div>
+                {timeLeft > 0 && (
+                  <p className="text-sm text-red-600">
+                    남은 시간: {formatTime(timeLeft)}
+                  </p>
+                )}
                 <p className="text-xs text-gray-600">발송된 6자리 인증번호를 입력해주세요</p>
               </div>
             )}
