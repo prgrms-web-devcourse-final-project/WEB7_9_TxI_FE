@@ -8,6 +8,12 @@ import { Route as eventRegisterRoute } from "./routes/events/$id/register";
 import { Route as eventQueueRoute } from "./routes/events/$id/queue";
 import { Route as myTicketsRoute } from "./routes/my-tickets";
 import { Route as myPageRoute } from "./routes/my-page";
+import { Route as adminRoute } from "./routes/admin";
+import { Route as adminQueueRoute } from "./routes/admin/queue.$eventId";
+import { Route as adminSeatsRoute } from "./routes/admin/seats.$eventId";
+import { Route as adminEventRoute } from "./routes/admin/events.$eventId";
+import { Route as adminEventEditRoute } from "./routes/admin/events.$eventId.edit";
+import { Route as adminEventNewRoute } from "./routes/admin/events.new";
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -18,6 +24,12 @@ const routeTree = rootRoute.addChildren([
   eventQueueRoute,
   myTicketsRoute,
   myPageRoute,
+  adminRoute,
+  adminQueueRoute,
+  adminSeatsRoute,
+  adminEventRoute,
+  adminEventEditRoute,
+  adminEventNewRoute,
 ]);
 
 export const router = createRouter({ routeTree });

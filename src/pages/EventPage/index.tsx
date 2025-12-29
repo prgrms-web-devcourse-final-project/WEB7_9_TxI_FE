@@ -29,7 +29,7 @@ export default function EventsPage() {
       }),
   })
 
-  const events = data.data.content
+  const events = data.data.content.filter((event) => event.deleted !== true)
   const totalPages = data.data.totalPages
 
   const handlePageChange = (page: number) => {

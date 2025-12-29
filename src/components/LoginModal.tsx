@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/Input'
 import { useAuthStore } from '@/stores/authStore'
 import type { LoginRequest } from '@/types/auth'
 import { loginFormSchema } from '@/utils/validation'
+import { getRoleFromToken } from '@/utils/auth'
 import { useForm } from '@tanstack/react-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -41,14 +42,45 @@ export function LoginModal({ open, onOpenChange, onOpenSignupChange }: LoginModa
         onSuccess: async (response) => {
           queryClient.clear()
 
-          setAccessToken(response.data.tokens.accessToken)
+          const accessToken = response.data.tokens.accessToken
+          setAccessToken(accessToken)
 
           form.reset()
           toast.success('로그인되었습니다.')
 
-          const { data } = await userApi.getUserProfile()
-          setUser(data)
+          // 토큰에서 role 확인 (getUserProfile 전에 먼저 확인)
+          const userRole = getRoleFromToken(accessToken)
+          
+          // 디버깅을 위한 로그
+          console.log('=== Login Success ===')
+          console.log('User role from token:', userRole)
+          console.log('Is ADMIN?', userRole === 'ADMIN')
+
+          // getUserProfile은 선택적으로 호출 (에러가 발생해도 계속 진행)
+          let userData = null
+          try {
+            const { data } = await userApi.getUserProfile()
+            setUser(data)
+            userData = data
+            console.log('User data role:', data.role)
+          } catch (error) {
+            // getUserProfile 실패해도 토큰으로 role 확인 가능하므로 계속 진행
+            console.warn('Failed to get user profile (this is OK for admin):', error)
+          }
+          
+          // 모달을 먼저 닫기
           onOpenChange(false)
+
+          // 관리자면 관리자 페이지로 이동
+          // userRole 또는 userData?.role 둘 다 확인
+          if (userRole === 'ADMIN' || userData?.role === 'ADMIN') {
+            console.log('✅ Admin detected! Redirecting to /admin')
+            // window.location을 사용하여 강제 리다이렉트
+            window.location.href = '/admin'
+          } else {
+            console.log('❌ Not admin, staying on current page')
+            console.log('userRole:', userRole, 'userData?.role:', userData?.role)
+          }
         },
         onError: (error) => {
           toast.error(error.message)

@@ -23,6 +23,7 @@ export interface Event {
   maxTicketAmount?: number
   status: EventStatus
   createdAt?: string
+  deleted?: boolean
 }
 
 export interface PageableRequest {
