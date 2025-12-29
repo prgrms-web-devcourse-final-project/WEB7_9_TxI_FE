@@ -124,14 +124,14 @@ export default function EventDetailPage() {
             onClick: () => {},
           }
         }
-        if (queueStatusData.data?.status === 'COMPLETED') {
+        if (queueStatusData?.data?.status === 'COMPLETED') {
           return {
             text: '구매 완료',
             disabled: true,
             onClick: () => {},
           }
         }
-        if (queueStatusData.data?.status === 'EXPIRED') {
+        if (queueStatusData?.data?.status === 'EXPIRED') {
           return {
             text: '티켓팅 기간 만료',
             disabled: true,
