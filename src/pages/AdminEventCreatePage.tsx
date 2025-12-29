@@ -7,17 +7,15 @@ import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
 import { useAuthStore } from '@/stores/authStore'
 import { getRoleFromToken } from '@/utils/auth'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from '@tanstack/react-router'
-import { ArrowLeft, Save, Activity, Upload, X } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { ArrowLeft, Upload, X, Activity } from 'lucide-react'
+import { useState } from 'react'
 import { toast } from 'sonner'
-import type { EventCategory, EventStatus } from '@/types/event'
-import type { EventUpdateRequest, EventResponse } from '@/types/admin/event'
+import type { EventCategory } from '@/types/event'
+import type { EventCreateRequest } from '@/types/admin/event'
 
-
-export default function AdminEventEditPage() {
-  const { eventId } = useParams({ from: '/admin/events/$eventId/edit' })
+export default function AdminEventCreatePage() {
   const navigate = useNavigate()
   const { isAuthenticated, accessToken } = useAuthStore()
   const queryClient = useQueryClient()
@@ -26,24 +24,19 @@ export default function AdminEventEditPage() {
   const isAdmin = userRole === 'ADMIN'
   const hasAuth = isAuthenticated || !!accessToken
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState<EventUpdateRequest>({
+  const [formData, setFormData] = useState<Omit<EventCreateRequest, 'preOpenAt' | 'preCloseAt' | 'ticketOpenAt' | 'ticketCloseAt' | 'eventDate'>>({
     title: '',
     category: 'CONCERT',
-    place: '',
     description: '',
+    place: '',
     imageUrl: '',
     minPrice: 0,
     maxPrice: 0,
-    preOpenAt: '',
-    preCloseAt: '',
-    ticketOpenAt: '',
-    ticketCloseAt: '',
-    eventDate: '',
     maxTicketAmount: 0,
-    status: 'READY',
   })
 
   // 날짜와 시간을 분리하여 저장
@@ -55,118 +48,33 @@ export default function AdminEventEditPage() {
     ticketCloseAt: { date: '', time: '' },
   })
 
-  const { data: eventData, isLoading, error: eventError } = useQuery({
-    queryKey: ['admin', 'event', eventId],
-    queryFn: () => adminEventsApi.getEventByIdForAdmin(eventId),
-    enabled: hasAuth && isAdmin,
-    retry: false,
-    throwOnError: false,
-  })
-
-  // 날짜와 시간을 분리하는 헬퍼 함수 (로컬 타임존 고려)
-  const splitDateTime = (dateTimeString: string) => {
-    if (!dateTimeString) {
-      return { date: '', time: '' }
-    }
-    
-    // ISO 형식 문자열을 파싱 (예: "2024-01-15T14:30:00" 또는 "2024-01-15T14:30:00.000Z")
-    const date = new Date(dateTimeString)
-    
-    // 유효한 날짜인지 확인
-    if (isNaN(date.getTime())) {
-      console.warn('Invalid date string:', dateTimeString)
-      return { date: '', time: '' }
-    }
-    
-    // 로컬 타임존으로 변환하여 날짜와 시간 추출
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    
-    return {
-      date: `${year}-${month}-${day}`,
-      time: `${hours}:${minutes}`,
-    }
-  }
-
-  useEffect(() => {
-    if (eventData?.data) {
-      const event = eventData.data as EventResponse
-      
-      // 날짜와 시간 분리
-      const ticketOpenDateTime = splitDateTime(event.ticketOpenAt)
-      const preOpenDateTime = splitDateTime(event.preOpenAt)
-      const preCloseDateTime = splitDateTime(event.preCloseAt)
-      const ticketCloseDateTime = event.ticketCloseAt
-        ? splitDateTime(event.ticketCloseAt)
-        : splitDateTime(event.ticketOpenAt)
-      const eventDateTime = splitDateTime(event.eventDate || event.ticketOpenAt)
-
-      setFormData({
-        title: event.title || '',
-        category: event.category || 'CONCERT',
-        place: event.place || '',
-        description: event.description || '',
-        imageUrl: event.imageUrl || '',
-        minPrice: event.minPrice || 0,
-        maxPrice: event.maxPrice || 0,
-        preOpenAt: event.preOpenAt || '',
-        preCloseAt: event.preCloseAt || '',
-        ticketOpenAt: event.ticketOpenAt || '',
-        ticketCloseAt: event.ticketCloseAt || event.ticketOpenAt || '',
-        eventDate: event.eventDate || event.ticketOpenAt || '',
-        maxTicketAmount: event.maxTicketAmount || 0,
-        status: event.status || 'READY',
-      })
-
-      setDateTimeFields({
-        eventDate: eventDateTime,
-        preOpenAt: preOpenDateTime,
-        preCloseAt: preCloseDateTime,
-        ticketOpenAt: ticketOpenDateTime,
-        ticketCloseAt: ticketCloseDateTime,
-      })
-
-      // 기존 이미지가 있으면 미리보기 설정
-      if (event.imageUrl && event.imageUrl.trim() !== '') {
-        // imageUrl이 이미 URL 형식인지 확인
-        if (event.imageUrl.startsWith('http://') || event.imageUrl.startsWith('https://')) {
-          setImagePreview(event.imageUrl)
-        } else {
-          // objectKey인 경우, 백엔드에서 이미지 URL을 제공하는 API를 통해 표시
-          // 백엔드 API 엔드포인트 형식에 맞게 수정 필요
-          const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.waitfair.shop/api/v1'
-          // objectKey를 URL 인코딩하여 안전하게 처리
-          const imageUrl = `${baseUrl}/images/${encodeURIComponent(event.imageUrl)}`
-          setImagePreview(imageUrl)
-        }
-      } else {
-        // 이미지가 없으면 미리보기 초기화
-        setImagePreview(null)
-      }
-    }
-  }, [eventData])
-
-  const updateEventMutation = useMutation({
-    mutationFn: (data: EventUpdateRequest) =>
-      adminEventsApi.updateEvent(Number(eventId), data),
+  const createEventMutation = useMutation({
+    mutationFn: (data: EventCreateRequest) => adminEventsApi.createEvent(data),
     onSuccess: () => {
-      toast.success('이벤트가 수정되었습니다')
-      queryClient.invalidateQueries({ queryKey: ['admin', 'event', eventId] })
+      toast.success('이벤트가 생성되었습니다')
       queryClient.invalidateQueries({ queryKey: ['admin', 'events', 'dashboard'] })
-      navigate({ to: '/admin/events/$eventId', params: { eventId } })
+      navigate({ to: '/admin' })
     },
     onError: (error: Error) => {
-      toast.error('이벤트 수정 실패', {
+      toast.error('이벤트 생성 실패', {
         description: error.message,
       })
+      setIsSubmitting(false)
     },
   })
 
-  const handleChange = (field: keyof EventUpdateRequest, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value === '' ? 0 : Number(value) }))
+  }
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData((prev) => ({ ...prev, category: e.target.value as EventCategory }))
   }
 
   const handleDateTimeChange = (
@@ -252,13 +160,55 @@ export default function AdminEventEditPage() {
     setFormData((prev) => ({ ...prev, imageUrl: '' }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateDates = () => {
+    const { preOpenAt, preCloseAt, ticketOpenAt, ticketCloseAt } = dateTimeFields
+
+    if (!preOpenAt.date || !preOpenAt.time || !preCloseAt.date || !preCloseAt.time) {
+      toast.error('사전등록 시작일과 종료일을 모두 입력해주세요')
+      return false
+    }
+
+    if (!ticketOpenAt.date || !ticketOpenAt.time || !ticketCloseAt.date || !ticketCloseAt.time) {
+      toast.error('티켓팅 시작일과 종료일을 모두 입력해주세요')
+      return false
+    }
+
+    const preOpen = new Date(`${preOpenAt.date}T${preOpenAt.time}:00`)
+    const preClose = new Date(`${preCloseAt.date}T${preCloseAt.time}:00`)
+    const ticketOpen = new Date(`${ticketOpenAt.date}T${ticketOpenAt.time}:00`)
+    const ticketClose = new Date(`${ticketCloseAt.date}T${ticketCloseAt.time}:00`)
+
+    if (preOpen >= preClose) {
+      toast.error('사전등록 종료일은 시작일보다 이후여야 합니다')
+      return false
+    }
+
+    if (preClose >= ticketOpen) {
+      toast.error('티켓팅 시작일은 사전등록 종료일보다 이후여야 합니다')
+      return false
+    }
+
+    if (ticketOpen >= ticketClose) {
+      toast.error('티켓팅 종료일은 시작일보다 이후여야 합니다')
+      return false
+    }
+
+    return true
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.title || !formData.place) {
+    if (!validateDates()) {
+      return
+    }
+
+    if (!formData.title || !formData.category || !formData.place) {
       toast.error('필수 항목을 모두 입력해주세요')
       return
     }
+
+    setIsSubmitting(true)
 
     // 날짜와 시간을 ISO 형식으로 변환
     const combineDateTime = (date: string, time: string) => {
@@ -266,7 +216,7 @@ export default function AdminEventEditPage() {
       return `${date}T${time}:00`
     }
 
-    const updateData: EventUpdateRequest = {
+    const createData: EventCreateRequest = {
       ...formData,
       preOpenAt: combineDateTime(dateTimeFields.preOpenAt.date, dateTimeFields.preOpenAt.time),
       preCloseAt: combineDateTime(dateTimeFields.preCloseAt.date, dateTimeFields.preCloseAt.time),
@@ -281,7 +231,7 @@ export default function AdminEventEditPage() {
       eventDate: combineDateTime(dateTimeFields.eventDate.date, dateTimeFields.eventDate.time),
     }
 
-    updateEventMutation.mutate(updateData)
+    createEventMutation.mutate(createData)
   }
 
   if (!hasAuth || !isAdmin) {
@@ -294,109 +244,70 @@ export default function AdminEventEditPage() {
     )
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Activity className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">로딩 중...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (eventError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">이벤트를 불러올 수 없습니다.</p>
-          <p className="text-sm text-red-600 mb-4">
-            {eventError instanceof Error ? eventError.message : '알 수 없는 오류'}
-          </p>
-          <Button variant="outline" asChild>
-            <Link to="/admin">대시보드로 돌아가기</Link>
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
-  if (!eventData?.data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">이벤트를 찾을 수 없습니다.</p>
-          <Button variant="outline" asChild>
-            <Link to="/admin">대시보드로 돌아가기</Link>
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
+        <div className="mb-6">
           <Button variant="ghost" size="sm" asChild className="mb-4">
-            <Link to="/admin/events/$eventId" params={{ eventId }}>
+            <Link to="/admin">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              이벤트 관리로 돌아가기
+              대시보드로 돌아가기
             </Link>
           </Button>
-          <h1 className="text-3xl font-bold mb-2">이벤트 수정</h1>
-          <p className="text-gray-600">이벤트 정보를 수정합니다</p>
+          <h1 className="text-3xl font-bold mb-2">새 이벤트 생성</h1>
+          <p className="text-gray-600">새로운 티켓팅 이벤트를 등록하고 관리하세요</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">기본 정보</h2>
-            <div className="space-y-4">
+        <form onSubmit={handleSubmit}>
+          <Card className="p-6 mb-6">
+            <h2 className="text-xl font-bold mb-6">기본 정보</h2>
+            <div className="space-y-6">
               <div>
                 <Label htmlFor="title">이벤트 제목 *</Label>
                 <Input
                   id="title"
+                  name="title"
                   value={formData.title}
-                  onChange={(e) => handleChange('title', e.target.value)}
-                  placeholder="이벤트 제목을 입력하세요"
+                  onChange={handleInputChange}
+                  placeholder="예: 2025 서울 뮤직 페스티벌"
                   required
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="category">카테고리 *</Label>
-                  <select
-                    id="category"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-                    value={formData.category}
-                    onChange={(e) => handleChange('category', e.target.value as EventCategory)}
-                  >
-                    <option value="CONCERT">콘서트</option>
-                    <option value="POPUP">팝업</option>
-                    <option value="DROP">드롭</option>
-                  </select>
-                </div>
-
-                <div>
-                  <Label htmlFor="place">장소 *</Label>
-                  <Input
-                    id="place"
-                    value={formData.place}
-                    onChange={(e) => handleChange('place', e.target.value)}
-                    placeholder="예: 잠실종합운동장"
-                    required
-                  />
-                </div>
+              <div>
+                <Label htmlFor="category">카테고리 *</Label>
+                <select
+                  id="category"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={formData.category}
+                  onChange={handleCategoryChange}
+                >
+                  <option value="CONCERT">콘서트</option>
+                  <option value="POPUP">팝업</option>
+                  <option value="DROP">드롭</option>
+                </select>
               </div>
 
               <div>
-                <Label htmlFor="description">이벤트 설명</Label>
+                <Label htmlFor="place">장소 *</Label>
+                <Input
+                  id="place"
+                  name="place"
+                  value={formData.place}
+                  onChange={handleInputChange}
+                  placeholder="예: 서울 올림픽공원 체조경기장"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description">설명</Label>
                 <Textarea
                   id="description"
+                  name="description"
                   value={formData.description}
-                  onChange={(e) => handleChange('description', e.target.value)}
-                  placeholder="이벤트에 대한 설명을 입력하세요"
+                  onChange={handleInputChange}
+                  placeholder="이벤트에 대한 자세한 설명을 입력하세요"
                   rows={4}
                 />
               </div>
@@ -457,9 +368,9 @@ export default function AdminEventEditPage() {
             </div>
           </Card>
 
-          <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">일정 설정</h2>
-            <div className="space-y-4">
+          <Card className="p-6 mb-6">
+            <h2 className="text-xl font-bold mb-6">일정 정보</h2>
+            <div className="space-y-6">
               <div>
                 <Label htmlFor="eventDate">이벤트 날짜 *</Label>
                 <div className="grid md:grid-cols-2 gap-4">
@@ -480,10 +391,10 @@ export default function AdminEventEditPage() {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="preOpenAt">사전등록 시작일 *</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <Label htmlFor="preOpenAt">사전등록 시작 *</Label>
+                  <div className="grid md:grid-cols-2 gap-2">
                     <Input
                       id="preOpenAt"
                       type="date"
@@ -500,9 +411,10 @@ export default function AdminEventEditPage() {
                     />
                   </div>
                 </div>
+
                 <div>
-                  <Label htmlFor="preCloseAt">사전등록 마감일 *</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <Label htmlFor="preCloseAt">사전등록 종료 *</Label>
+                  <div className="grid md:grid-cols-2 gap-2">
                     <Input
                       id="preCloseAt"
                       type="date"
@@ -519,12 +431,10 @@ export default function AdminEventEditPage() {
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="ticketOpenAt">티켓팅 시작일 *</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <Label htmlFor="ticketOpenAt">티켓팅 시작 *</Label>
+                  <div className="grid md:grid-cols-2 gap-2">
                     <Input
                       id="ticketOpenAt"
                       type="date"
@@ -541,9 +451,10 @@ export default function AdminEventEditPage() {
                     />
                   </div>
                 </div>
+
                 <div>
-                  <Label htmlFor="ticketCloseAt">티켓팅 마감일 *</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <Label htmlFor="ticketCloseAt">티켓팅 종료 *</Label>
+                  <div className="grid md:grid-cols-2 gap-2">
                     <Input
                       id="ticketCloseAt"
                       type="date"
@@ -564,85 +475,63 @@ export default function AdminEventEditPage() {
             </div>
           </Card>
 
-          <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">좌석 및 가격</h2>
-            <div className="space-y-4">
+          <Card className="p-6 mb-6">
+            <h2 className="text-xl font-bold mb-6">좌석 및 가격 정보</h2>
+            <div className="grid md:grid-cols-3 gap-6">
               <div>
                 <Label htmlFor="maxTicketAmount">최대 티켓 수 *</Label>
                 <Input
                   id="maxTicketAmount"
+                  name="maxTicketAmount"
                   type="number"
-                  value={formData.maxTicketAmount}
-                  onChange={(e) => handleChange('maxTicketAmount', Number.parseInt(e.target.value) || 0)}
-                  placeholder="예: 20000"
                   min="1"
+                  value={formData.maxTicketAmount}
+                  onChange={handleNumberChange}
+                  placeholder="예: 20000"
                   required
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="minPrice">최소 가격 (원) *</Label>
-                  <Input
-                    id="minPrice"
-                    type="number"
-                    value={formData.minPrice}
-                    onChange={(e) => handleChange('minPrice', Number.parseInt(e.target.value) || 0)}
-                    placeholder="원"
-                    min="0"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="maxPrice">최대 가격 (원) *</Label>
-                  <Input
-                    id="maxPrice"
-                    type="number"
-                    value={formData.maxPrice}
-                    onChange={(e) => handleChange('maxPrice', Number.parseInt(e.target.value) || 0)}
-                    placeholder="원"
-                    min="0"
-                    required
-                  />
-                </div>
+              <div>
+                <Label htmlFor="minPrice">최소 가격 (원)</Label>
+                <Input
+                  id="minPrice"
+                  name="minPrice"
+                  type="number"
+                  min="0"
+                  value={formData.minPrice}
+                  onChange={handleNumberChange}
+                  placeholder="예: 50000"
+                />
               </div>
 
               <div>
-                <Label htmlFor="status">이벤트 상태 *</Label>
-                <select
-                  id="status"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  value={formData.status}
-                  onChange={(e) => handleChange('status', e.target.value as EventStatus)}
-                >
-                  <option value="READY">준비중</option>
-                  <option value="PRE_OPEN">사전등록 진행중</option>
-                  <option value="PRE_CLOSED">사전등록 마감</option>
-                  <option value="QUEUE_READY">대기열 준비</option>
-                  <option value="OPEN">티켓팅 진행중</option>
-                  <option value="CLOSED">마감</option>
-                </select>
+                <Label htmlFor="maxPrice">최대 가격 (원)</Label>
+                <Input
+                  id="maxPrice"
+                  name="maxPrice"
+                  type="number"
+                  min="0"
+                  value={formData.maxPrice}
+                  onChange={handleNumberChange}
+                  placeholder="예: 150000"
+                />
               </div>
             </div>
           </Card>
 
-          <div className="flex gap-4">
-            <Button type="button" variant="outline" className="flex-1" asChild>
-              <Link to="/admin/events/$eventId" params={{ eventId }}>
-                취소
-              </Link>
+          <div className="flex gap-3 justify-end">
+            <Button type="button" variant="outline" asChild>
+              <Link to="/admin">취소</Link>
             </Button>
-            <Button type="submit" className="flex-1" disabled={updateEventMutation.isPending}>
-              {updateEventMutation.isPending ? (
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
                 <>
-                  <Activity className="w-4 h-4 animate-spin mr-2" />
-                  저장 중...
+                  <Activity className="w-4 h-4 mr-2 animate-spin" />
+                  생성 중...
                 </>
               ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  수정 완료
-                </>
+                '이벤트 생성'
               )}
             </Button>
           </div>

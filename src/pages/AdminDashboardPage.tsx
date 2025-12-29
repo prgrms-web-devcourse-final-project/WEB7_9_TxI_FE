@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   TrendingUp,
   Clock,
+  Plus,
 } from 'lucide-react'
 import { getRoleFromToken } from '@/utils/auth'
 
@@ -21,7 +22,6 @@ export default function AdminDashboardPage() {
   const userRole = getRoleFromToken(accessToken)
   const isAdmin = userRole === 'ADMIN'
   
-  // accessToken이 있으면 인증된 것으로 간주 (로그인 직후 상태 업데이트 지연 대응)
   const hasAuth = isAuthenticated || !!accessToken
 
   const { data, isLoading, refetch } = useQuery({
@@ -36,7 +36,6 @@ export default function AdminDashboardPage() {
     {
       label: '총 이벤트',
       value: eventStats.length.toString(),
-      change: '+3',
       icon: Calendar,
       color: 'text-blue-600',
     },
@@ -45,7 +44,6 @@ export default function AdminDashboardPage() {
       value: eventStats
         .reduce((acc, e) => acc + e.preRegisterCount, 0)
         .toLocaleString(),
-      change: '+5.2K',
       icon: Users,
       color: 'text-blue-600',
     },
@@ -54,7 +52,6 @@ export default function AdminDashboardPage() {
       value: eventStats
         .reduce((acc, e) => acc + e.totalSoldSeats, 0)
         .toLocaleString(),
-      change: '+1.2K',
       icon: TrendingUp,
       color: 'text-blue-600',
     },
@@ -63,7 +60,6 @@ export default function AdminDashboardPage() {
       value: `₩${eventStats
         .reduce((acc, e) => acc + e.totalSalesAmount, 0)
         .toLocaleString()}`,
-      change: '+12%',
       icon: Activity,
       color: 'text-blue-600',
     },
@@ -127,13 +123,12 @@ export default function AdminDashboardPage() {
             <p className="text-gray-600">실시간 이벤트 및 대기열 모니터링</p>
           </div>
           <div className="flex gap-3">
-            {/* TODO: 새 이벤트 생성 페이지 라우트 추가 후 활성화 */}
-            {/* <Button asChild>
+            <Button asChild>
               <Link to="/admin/events/new">
                 <Plus className="w-4 h-4 mr-2" />
                 새 이벤트 생성
               </Link>
-            </Button> */}
+            </Button>
           </div>
         </div>
 
@@ -142,9 +137,6 @@ export default function AdminDashboardPage() {
             <Card key={stat.label} className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <stat.icon className={`w-8 h-8 ${stat.color}`} />
-                <Badge className="text-xs border-gray-300">
-                  {stat.change}
-                </Badge>
               </div>
               <div className="text-3xl font-bold mb-1">{stat.value}</div>
               <div className="text-sm text-gray-600">{stat.label}</div>

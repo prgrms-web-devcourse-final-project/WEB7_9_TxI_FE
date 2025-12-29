@@ -1,5 +1,5 @@
 import { adminSeatsApi } from '@/api/admin/seats'
-import { eventsApi } from '@/api/events'
+import { adminEventsApi } from '@/api/admin/events'
 import { ConfirmModal } from '@/components/ConfirmModal'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -64,8 +64,8 @@ export default function AdminSeatManagementPage() {
   const [editStatus, setEditStatus] = useState<'AVAILABLE' | 'SOLD' | 'RESERVED'>('AVAILABLE')
 
   const { data: eventData, error: eventError } = useQuery({
-    queryKey: ['event', eventId],
-    queryFn: () => eventsApi.getEventById(eventId),
+    queryKey: ['admin', 'event', eventId],
+    queryFn: () => adminEventsApi.getEventByIdForAdmin(eventId),
     enabled: hasAuth && isAdmin,
     retry: false,
     throwOnError: false,

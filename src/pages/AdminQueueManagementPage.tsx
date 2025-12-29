@@ -1,10 +1,12 @@
 import { adminQueuesApi } from '@/api/admin/queue'
-import { eventsApi } from '@/api/events'
+import { adminPreRegistersApi } from '@/api/admin/preRegister'
+import { adminEventsApi } from '@/api/admin/events'
 import { ConfirmModal } from '@/components/ConfirmModal'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { Pagination } from '@/components/ui/Pagination'
 import { useAuthStore } from '@/stores/authStore'
 import { getRoleFromToken } from '@/utils/auth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -16,17 +18,8 @@ import {
   Shuffle,
   Search,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
-
-interface QueueUser {
-  userId: number
-  username: string
-  email: string
-  queuePosition: number
-  assignedAt: string
-  status: 'WAITING' | 'ENTERED' | 'PAID' | 'EXPIRED'
-}
 
 export default function AdminQueueManagementPage() {
   const { eventId } = useParams({ from: '/admin/queue/$eventId' })
@@ -36,16 +29,16 @@ export default function AdminQueueManagementPage() {
   const userRole = getRoleFromToken(accessToken)
   const isAdmin = userRole === 'ADMIN'
   
-  // accessToken이 있으면 인증된 것으로 간주 (로그인 직후 상태 업데이트 지연 대응)
   const hasAuth = isAuthenticated || !!accessToken
 
-  const [queueUsers, setQueueUsers] = useState<QueueUser[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [isShuffleModalOpen, setIsShuffleModalOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageSize = 20
 
   const { data: eventData, error: eventError } = useQuery({
-    queryKey: ['event', eventId],
-    queryFn: () => eventsApi.getEventById(eventId),
+    queryKey: ['admin', 'event', eventId],
+    queryFn: () => adminEventsApi.getEventByIdForAdmin(eventId),
     enabled: hasAuth && isAdmin,
     retry: false, // 에러 발생 시 재시도하지 않음
     throwOnError: false, // 에러를 ErrorBoundary로 전파하지 않음
@@ -57,67 +50,86 @@ export default function AdminQueueManagementPage() {
     enabled: hasAuth && isAdmin && !!eventId,
   })
 
+  const { data: preRegisterCountData } = useQuery({
+    queryKey: ['admin', 'pre-registers', eventId, 'count'],
+    queryFn: () => adminPreRegistersApi.getPreRegisterCountByEventId(Number(eventId)),
+    enabled: hasAuth && isAdmin && !!eventId,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const { data: queueEntriesData, isLoading: isQueueEntriesLoading, error: queueEntriesError } = useQuery({
+    queryKey: ['admin', 'queue', 'entries', eventId, currentPage],
+    queryFn: () =>
+      adminQueuesApi.getQueueEntriesByEventId(Number(eventId), currentPage, pageSize),
+    enabled: hasAuth && isAdmin && !!eventId,
+    retry: false,
+    throwOnError: false,
+  })
+
+  const queueEntries = queueEntriesData?.data?.content || []
+  const hasQueueData = queueEntries.length > 0 && !queueEntriesError
+
+
+  const { data: preRegisterData, isLoading: isPreRegisterLoading } = useQuery({
+    queryKey: ['admin', 'pre-registers', eventId, currentPage],
+    queryFn: () =>
+      adminPreRegistersApi.getPreRegistersByEventId(Number(eventId), currentPage, pageSize),
+    enabled: hasAuth && isAdmin && !!eventId && !hasQueueData,
+    retry: false,
+    throwOnError: false,
+  })
+
   const shuffleMutation = useMutation({
     mutationFn: (data: { preRegisteredUserIds: number[] }) =>
       adminQueuesApi.shuffleQueue(Number(eventId), data),
     onSuccess: () => {
       toast.success('대기열이 랜덤하게 재배정되었습니다')
       queryClient.invalidateQueries({ queryKey: ['admin', 'queue', 'statistics', eventId] })
-      loadQueueUsers()
+      queryClient.invalidateQueries({ queryKey: ['admin', 'queue', 'entries', eventId] })
     },
     onError: (error: Error) => {
       toast.error(error.message)
     },
   })
 
-  useEffect(() => {
-    if (eventId && hasAuth && isAdmin) {
-      loadQueueUsers()
-    }
-  }, [eventId, hasAuth, isAdmin])
-
-  const loadQueueUsers = async () => {
-    // TODO: 실제 API가 추가되면 교체
-    // const response = await adminQueuesApi.getQueueUsers(Number(eventId))
-    // setQueueUsers(response.data)
-
-    // 임시 mock 데이터
-    const mockQueueUsers: QueueUser[] = Array.from({ length: 20 }, (_, i) => ({
-      userId: 1000 + i,
-      username: `user${1000 + i}`,
-      email: `user${1000 + i}@test.com`,
-      queuePosition: i + 1,
-      assignedAt: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-      status:
-        i < 3
-          ? 'WAITING'
-          : i < 8
-            ? 'ENTERED'
-            : i < 15
-              ? 'PAID'
-              : 'EXPIRED',
-    }))
-    setQueueUsers(mockQueueUsers)
-  }
-
   const handleManualShuffle = async () => {
     // 사전등록된 사용자 ID 목록을 가져와야 함
     // TODO: 실제 API에서 사전등록 사용자 목록을 가져오는 로직 추가
-    const preRegisteredUserIds = queueUsers
-      .filter((u) => u.status === 'WAITING' || u.status === 'ENTERED')
-      .map((u) => u.userId)
+    const queueEntries = queueEntriesData?.data?.content || []
+    const preRegisteredUserIds = queueEntries
+      .filter((u) => u.queueEntryStatus === 'WAITING' || u.queueEntryStatus === 'ENTERED')
+      .map((u) => u.id)
 
     shuffleMutation.mutate({ preRegisteredUserIds })
     setIsShuffleModalOpen(false)
   }
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
-  const filteredUsers = queueUsers.filter(
-    (user) =>
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.queuePosition.toString().includes(searchQuery),
-  )
+  const totalPages = queueEntriesData?.data?.totalPages || 0
+
+  // 대기열 데이터가 없으면 사전등록 데이터 사용
+  const preRegisters = preRegisterData?.data?.content || []
+  const preRegisterTotalPages = preRegisterData?.data?.totalPages || 0
+
+  // 대기열 데이터가 있으면 대기열, 없으면 사전등록 데이터 필터링
+  const filteredUsers = hasQueueData
+    ? queueEntries.filter(
+        (user) =>
+          user.userEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.queueRank.toString().includes(searchQuery),
+      )
+    : preRegisters.filter((preRegister) =>
+        preRegister.userEmail.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+
+  const showQueueTable = hasQueueData
+  const hasPreRegisterData = preRegisters.length > 0
+  const isEmpty = !hasQueueData && !hasPreRegisterData && !isPreRegisterLoading
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -129,7 +141,7 @@ export default function AdminQueueManagementPage() {
             입장
           </Badge>
         )
-      case 'PAID':
+      case 'COMPLETED':
         return (
           <Badge className="bg-green-100 text-green-700 border-green-300">
             결제 완료
@@ -144,7 +156,6 @@ export default function AdminQueueManagementPage() {
     }
   }
 
-  // 라우트 가드에서 이미 권한 체크를 하므로 여기서는 hasAuth와 isAdmin만 확인
   if (!hasAuth || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -155,7 +166,7 @@ export default function AdminQueueManagementPage() {
     )
   }
 
-  if (isStatsLoading) {
+  if (isStatsLoading || isQueueEntriesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Activity className="w-12 h-12 animate-spin text-blue-600" />
@@ -166,8 +177,7 @@ export default function AdminQueueManagementPage() {
   const event = eventData?.data
   const queueStats = queueStatsData?.data
 
-  // 이벤트 정보가 없어도 페이지는 표시 (에러 발생 시에도 계속 진행)
-  const eventTitle = event?.title || `이벤트 ID: ${eventId}`
+  const eventTitle = event?.title
 
   const queueStatus = {
     isActive: queueStats ? queueStats.waitingCount > 0 || queueStats.enteredCount > 0 : false,
@@ -196,7 +206,17 @@ export default function AdminQueueManagementPage() {
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Users className="w-8 h-8 text-purple-600" />
+            </div>
+            <div className="text-3xl font-bold mb-1">
+              {(preRegisterCountData?.data || 0).toLocaleString()}
+            </div>
+            <div className="text-sm text-gray-600">사전 등록 인원</div>
+          </Card>
+
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <Users className="w-8 h-8 text-blue-600" />
@@ -211,7 +231,7 @@ export default function AdminQueueManagementPage() {
               </Badge>
             </div>
             <div className="text-3xl font-bold mb-1">
-              {queueStatus.totalInQueue.toLocaleString()}
+              {queueStatus.waitingCount.toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">대기 인원</div>
           </Card>
@@ -238,53 +258,138 @@ export default function AdminQueueManagementPage() {
         </Card>
 
         <Card className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">대기열 사용자 목록</h2>
-            <div className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-gray-500" />
-              <Input
-                type="text"
-                placeholder="이름, 이메일, 순번 검색..."
-                className="w-64"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-bold">
+                {showQueueTable ? '대기열 사용자 목록' : '사전 등록 사용자 목록'}
+              </h2>
+              <div className="flex items-center gap-2">
+                <Search className="w-4 h-4 text-gray-500" />
+                <Input
+                  type="text"
+                  placeholder={showQueueTable ? '이름, 이메일, 순번 검색...' : '이메일 검색...'}
+                  className="w-64"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
+            {!showQueueTable && eventData?.data?.ticketOpenAt && (
+              <p className="text-sm text-blue-600 mt-2">
+                {(() => {
+                  try {
+                    const ticketOpenAt = new Date(eventData.data.ticketOpenAt)
+                    if (isNaN(ticketOpenAt.getTime())) {
+                      return null
+                    }
+                    const queueStartAt = new Date(ticketOpenAt.getTime() - 60 * 60 * 1000)
+                    return `티켓팅 시작 시간 1시간 전인 ${queueStartAt.toLocaleString('ko-KR')} 에 대기열이 랜덤으로 생성됩니다.`
+                  } catch (error) {
+                    console.error('Error formatting dates:', error)
+                    return null
+                  }
+                })()}
+              </p>
+            )}
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-sm">순번</th>
-                  <th className="text-left py-3 px-4 font-semibold text-sm">사용자 ID</th>
-                  <th className="text-left py-3 px-4 font-semibold text-sm">이메일</th>
-                  <th className="text-left py-3 px-4 font-semibold text-sm">배정 시간</th>
-                  <th className="text-left py-3 px-4 font-semibold text-sm">상태</th>
+                  {showQueueTable ? (
+                    <>
+                      <th className="text-left py-3 px-4 font-semibold text-sm">순번</th>
+                      <th className="text-left py-3 px-4 font-semibold text-sm">이메일</th>
+                      <th className="text-left py-3 px-4 font-semibold text-sm">배정 시간</th>
+                      <th className="text-left py-3 px-4 font-semibold text-sm">입장 시간</th>
+                      <th className="text-left py-3 px-4 font-semibold text-sm">만료 시간</th>
+                      <th className="text-left py-3 px-4 font-semibold text-sm">상태</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="text-left py-3 px-4 font-semibold text-sm">이메일</th>
+                      <th className="text-left py-3 px-4 font-semibold text-sm">사전 등록 시간</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
-                  <tr
-                    key={user.userId}
-                    className="border-b border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="py-3 px-4 font-semibold">#{user.queuePosition}</td>
-                    <td className="py-3 px-4">{user.username}</td>
-                    <td className="py-3 px-4 text-gray-600">{user.email}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
-                      {new Date(user.assignedAt).toLocaleString('ko-KR')}
-                    </td>
-                    <td className="py-3 px-4">{getStatusBadge(user.status)}</td>
-                  </tr>
-                ))}
+                {showQueueTable ? (
+                  filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-12 text-gray-500">
+                        {searchQuery ? '검색 결과가 없습니다' : '대기열 항목이 없습니다'}
+                      </td>
+                    </tr>
+                  ) : (
+                    (filteredUsers as typeof queueEntries).map((entry) => (
+                      <tr
+                        key={entry.id}
+                        className="border-b border-gray-200 hover:bg-gray-50"
+                      >
+                        <td className="py-3 px-4 font-semibold">#{entry.queueRank}</td>
+                        <td className="py-3 px-4 text-gray-600">{entry.userEmail}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600">
+                          {new Date(entry.createdAt).toLocaleString('ko-KR')}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-600">
+                          {entry.enteredAt ? (
+                            new Date(entry.enteredAt).toLocaleString('ko-KR')
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-600">
+                          {entry.expiredAt ? (
+                            new Date(entry.expiredAt).toLocaleString('ko-KR')
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">{getStatusBadge(entry.queueEntryStatus)}</td>
+                      </tr>
+                    ))
+                  )
+                ) : (
+                  filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={2} className="text-center py-12 text-gray-500">
+                        {searchQuery
+                          ? '검색 결과가 없습니다'
+                          : isEmpty
+                            ? '등록된 항목이 없습니다'
+                            : '사전 등록 항목이 없습니다'}
+                      </td>
+                    </tr>
+                  ) : (
+                    (filteredUsers as typeof preRegisters).map((preRegister) => (
+                      <tr
+                        key={preRegister.id}
+                        className="border-b border-gray-200 hover:bg-gray-50"
+                      >
+                        <td className="py-3 px-4 text-gray-600">{preRegister.userEmail}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600">
+                          {new Date(preRegister.createdAt).toLocaleString('ko-KR')}
+                        </td>
+                      </tr>
+                    ))
+                  )
+                )}
               </tbody>
             </table>
           </div>
 
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-12 text-gray-500">검색 결과가 없습니다</div>
-          )}
+          {!searchQuery &&
+            (showQueueTable ? totalPages > 1 : preRegisterTotalPages > 1) && (
+              <div className="mt-6">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={showQueueTable ? totalPages : preRegisterTotalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
         </Card>
       </main>
 

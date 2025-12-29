@@ -164,7 +164,7 @@ export default function AdminEventManagementPage() {
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">이벤트 날짜</div>
+                  <div className="text-sm text-gray-600 font-bold mb-1">이벤트 날짜</div>
                   <div className="font-medium">
                     {new Date(event.ticketOpenAt).toLocaleString('ko-KR')}
                   </div>
@@ -174,7 +174,7 @@ export default function AdminEventManagementPage() {
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">장소</div>
+                  <div className="text-sm text-gray-600 font-bold mb-1">장소</div>
                   <div className="font-medium">{event.place}</div>
                 </div>
               </div>
@@ -184,7 +184,7 @@ export default function AdminEventManagementPage() {
                   <div className="flex items-start gap-3">
                     <Users className="w-5 h-5 text-blue-600 mt-0.5" />
                     <div>
-                      <div className="text-sm text-gray-600 mb-1">사전등록 인원</div>
+                      <div className="text-sm text-gray-600 font-bold mb-1">사전등록 인원</div>
                       <div className="font-medium">
                         {dashboardEvent.preRegisterCount.toLocaleString()}명
                       </div>
@@ -194,7 +194,7 @@ export default function AdminEventManagementPage() {
                   <div className="flex items-start gap-3">
                     <Ticket className="w-5 h-5 text-blue-600 mt-0.5" />
                     <div>
-                      <div className="text-sm text-gray-600 mb-1">판매 좌석</div>
+                      <div className="text-sm text-gray-600 font-bold mb-1">판매 좌석</div>
                       <div className="font-medium">
                         {dashboardEvent.totalSoldSeats.toLocaleString()}석
                       </div>
@@ -206,14 +206,14 @@ export default function AdminEventManagementPage() {
 
             {event.description && (
               <div>
-                <div className="text-sm text-gray-600 mb-1">이벤트 설명</div>
+                <div className="text-sm text-gray-600 font-bold mb-1">이벤트 설명</div>
                 <p className="text-gray-900 leading-relaxed">{event.description}</p>
               </div>
             )}
 
             {dashboardEvent && (
               <div>
-                <div className="text-sm text-gray-600 mb-2">판매 현황</div>
+                <div className="text-sm text-gray-600 font-bold mb-2">판매 현황</div>
                 <div className="flex items-center gap-4">
                   <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
                     <div
@@ -225,7 +225,7 @@ export default function AdminEventManagementPage() {
                     {salesRate.toFixed(1)}%
                   </span>
                 </div>
-                <div className="mt-2 text-sm text-gray-600">
+                <div className="mt-2 text-sm text-gray-600 font-bold">
                   총 매출액: ₩{dashboardEvent.totalSalesAmount.toLocaleString()}
                 </div>
               </div>
@@ -236,13 +236,13 @@ export default function AdminEventManagementPage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">사전등록 시작일</div>
+                  <div className="text-sm text-gray-500 font-bold mb-1">사전등록 시작일</div>
                   <div className="text-sm font-medium">
                     {new Date(event.preOpenAt).toLocaleString('ko-KR')}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">사전등록 마감일</div>
+                  <div className="text-sm text-gray-500 font-bold mb-1">사전등록 마감일</div>
                   <div className="text-sm font-medium">
                     {new Date(event.preCloseAt).toLocaleString('ko-KR')}
                   </div>
@@ -251,14 +251,14 @@ export default function AdminEventManagementPage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">티켓팅 시작일시</div>
+                  <div className="text-sm text-gray-500 font-bold mb-1">티켓팅 시작일</div>
                   <div className="text-sm font-medium">
                     {new Date(event.ticketOpenAt).toLocaleString('ko-KR')}
                   </div>
                 </div>
                 {event.ticketCloseAt && (
                   <div>
-                    <div className="text-sm text-gray-600 mb-1">티켓팅 마감일</div>
+                    <div className="text-sm text-gray-500 font-bold mb-1">티켓팅 마감일</div>
                     <div className="text-sm font-medium">
                       {new Date(event.ticketCloseAt).toLocaleString('ko-KR')}
                     </div>
@@ -268,7 +268,7 @@ export default function AdminEventManagementPage() {
             </div>
 
             <div className="pt-4 border-t border-gray-200">
-              <div className="text-sm text-gray-600 mb-1">가격 범위</div>
+              <h3 className="font-semibold text-lg mb-2">가격 범위</h3>
               <div className="text-sm font-medium">
                 {event.minPrice.toLocaleString()}원 ~ {event.maxPrice.toLocaleString()}원
               </div>
@@ -297,7 +297,7 @@ export default function AdminEventManagementPage() {
           deleteEventMutation.mutate()
         }}
         title="이벤트 삭제"
-        description="정말로 이 이벤트를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        description="정말로 이 이벤트를 삭제하시겠습니까?"
         confirmText="삭제"
         cancelText="취소"
         variant="danger"
