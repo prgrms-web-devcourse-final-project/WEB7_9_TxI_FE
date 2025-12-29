@@ -40,11 +40,12 @@ export default function EventDetailPage() {
     enabled: isAuthenticated,
   })
 
-  const { data: queueStatusData } = useQuery({
+  const { data: queueStatusData, error: queueStatusError } = useQuery({
     queryKey: ['queueStatus', id],
     queryFn: () => queueApi.getQueueStatus(id),
     enabled: isAuthenticated && event.status === 'OPEN',
     retry: false,
+    throwOnError: false,
   })
 
   const deletePreRegisterMutation = useMutation({
@@ -116,14 +117,21 @@ export default function EventDetailPage() {
             onClick: () => {},
           }
         }
-        if (queueStatusData?.data?.status === 'COMPLETED') {
+        if (!queueStatusData || queueStatusError) {
+          return {
+            text: '대기열에 없습니다',
+            disabled: true,
+            onClick: () => {},
+          }
+        }
+        if (queueStatusData.data?.status === 'COMPLETED') {
           return {
             text: '구매 완료',
             disabled: true,
             onClick: () => {},
           }
         }
-        if (queueStatusData?.data?.status === 'EXPIRED') {
+        if (queueStatusData.data?.status === 'EXPIRED') {
           return {
             text: '티켓팅 기간 만료',
             disabled: true,

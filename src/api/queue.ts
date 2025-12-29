@@ -3,17 +3,20 @@ import type { ApiResponse } from '@/types/api'
 import type { QueueExistsResponse, QueueStatusResponse, MoveToBackResponse} from '@/types/queue'
 
 export const queueApi = {
-  getQueueStatus: async (eventId: string): Promise<ApiResponse<QueueStatusResponse>> => {
+  getQueueStatus: async (eventId: string): Promise<ApiResponse<QueueStatusResponse> | null> => {
     const response = await apiClient.get<ApiResponse<QueueStatusResponse>>(
       `/queues/${eventId}/status`,
+      {
+        validateStatus: (status) => status < 500,
+      },
     )
 
     if (response.data.status === '401 UNAUTHORIZED') {
       throw Error(response.data.message)
     }
 
-    if (response.data.status === '404 NOT_FOUND') {
-      throw Error(response.data.message)
+    if (response.status === 404 || response.data.status === '404 NOT_FOUND') {
+      return null
     }
 
     if (response.data.status === '500 INTERNAL_SERVER_ERROR') {
