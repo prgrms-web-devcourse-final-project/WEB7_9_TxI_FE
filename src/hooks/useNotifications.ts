@@ -10,7 +10,6 @@ import { useMutation } from '@tanstack/react-query'
 import { useCallback, useEffect, useState } from 'react'
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'https://api.waitfair.shop/ws'
-const NOTIFICATION_DESTINATION = '/user/notifications'
 const MAX_NOTIFICATIONS = 20
 
 export function useNotifications() {
@@ -19,61 +18,82 @@ export function useNotifications() {
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const { accessToken, isAuthenticated } = useAuthStore()
+  const { accessToken, isAuthenticated, user } = useAuthStore()
 
   useEffect(() => {
-    if (!isAuthenticated || !accessToken) {
+    console.log('[Notifications] useEffect triggered', { isAuthenticated, hasToken: !!accessToken, userId: user?.userId })
+
+    if (!isAuthenticated || !accessToken || !user?.userId) {
+      console.log('[Notifications] Not authenticated, no token, or no userId - skipping')
       return
     }
 
+    // 동적 구독 경로 생성
+    const notificationDestination = `/user/${user.userId}/notifications`
+    console.log('[Notifications] Notification destination:', notificationDestination)
+
     const wsClient = getWebSocketClient(WS_URL, () => accessToken)
+    console.log('[Notifications] WebSocket client obtained, connected:', wsClient.isConnected())
 
     const handleConnect = async () => {
+      console.log('[Notifications] ✅ handleConnect called - WebSocket connected!')
       setIsConnected(true)
       setError(null)
 
       try {
         setIsLoading(true)
+        console.log('[Notifications] Fetching initial notifications via HTTP API...')
         const response = await notificationApi.getNotifications()
         const notificationList = response.data.map(mapNotificationDTOToNotification)
 
         const limitedNotifications = notificationList.slice(0, MAX_NOTIFICATIONS)
+        console.log('[Notifications] Initial notifications loaded:', limitedNotifications.length)
         setNotifications(limitedNotifications)
         setUnreadCount(limitedNotifications.filter((n) => !n.read).length)
       } catch (err) {
+        console.error('[Notifications] ❌ Error loading initial notifications:', err)
         setError(err as Error)
       } finally {
         setIsLoading(false)
       }
 
-      wsClient.subscribe(NOTIFICATION_DESTINATION, (message) => {
+      console.log('[Notifications] 📡 Setting up WebSocket subscription to:', notificationDestination)
+      wsClient.subscribe(notificationDestination, (message) => {
+        console.log('[Notifications] 🔔 WebSocket message received!', message.body)
         try {
           const notificationDTO: NotificationDTO = JSON.parse(message.body)
           const notification = mapNotificationDTOToNotification(notificationDTO)
+          console.log('[Notifications] Parsed notification:', notification)
 
           setNotifications((prev) => {
             const updated = [notification, ...prev].slice(0, MAX_NOTIFICATIONS)
+            console.log('[Notifications] State updated, total notifications:', updated.length, 'unread:', updated.filter((n) => !n.read).length)
 
             setUnreadCount(updated.filter((n) => !n.read).length)
             return updated
           })
         } catch (err) {
+          console.error('[Notifications] ❌ Error processing WebSocket message:', err)
           setError(err as Error)
         }
       })
+      console.log('[Notifications] ✅ WebSocket subscription complete')
     }
 
     const handleError = (err: Error) => {
+      console.error('[Notifications] ❌ WebSocket error:', err)
       setIsConnected(false)
       setError(err)
     }
 
+    console.log('[Notifications] Calling wsClient.connect()')
     wsClient.connect(handleConnect, handleError)
 
     return () => {
-      wsClient.unsubscribe(NOTIFICATION_DESTINATION)
+      console.log('[Notifications] 🧹 Cleanup: Unsubscribing from WebSocket')
+      wsClient.unsubscribe(notificationDestination)
     }
-  }, [isAuthenticated, accessToken])
+  }, [isAuthenticated, user?.userId]) // userId 변경 시에도 재구독
 
   const markAsReadMutation = useMutation({
     mutationFn: notificationApi.markAsRead,
