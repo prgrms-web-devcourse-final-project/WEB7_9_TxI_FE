@@ -28,6 +28,9 @@ export default function QueuePage() {
   })
 
   const getInitialStep = (): QueueStep => {
+    if (!queueData) {
+      return 'waiting'
+    }
     const status = queueData.data.status
     switch (status) {
       case 'WAITING':
@@ -101,6 +104,12 @@ export default function QueuePage() {
   }, [step, isRunning, start])
 
   useEffect(() => {
+    if (queueData === null) {
+      navigate({ to: '/events' })
+      toast.error('대기열에 없습니다.')
+      return
+    }
+
     const status = queueData.data.status
 
     if (status === 'WAITING' && step !== 'waiting' && step !== 'purchase' && step !== 'payment') {
@@ -113,7 +122,7 @@ export default function QueuePage() {
     } else if (status === 'COMPLETED') {
       navigate({ to: '/my-tickets' })
     }
-  }, [queueData.data.status, step, navigate, start])
+  }, [queueData, step, navigate, start])
 
   useEffect(() => {
     if (personalEvent) {
@@ -197,10 +206,14 @@ export default function QueuePage() {
     )
   }
 
-  const currentPosition = queuePosition ?? queueData.data.queueRank
-  const currentWaitingAhead = waitingAhead ?? queueData.data.waitingAhead
-  const currentEstimatedTime = estimatedWaitTime ?? queueData.data.estimatedWaitTime
-  const currentProgress = progress != null ? progress : queueData.data.progress
+  const currentPosition = queuePosition ?? queueData?.data.queueRank ?? 0
+  const currentWaitingAhead = waitingAhead ?? queueData?.data.waitingAhead ?? 0
+  const currentEstimatedTime = estimatedWaitTime ?? queueData?.data.estimatedWaitTime ?? 0
+  const currentProgress = progress != null ? progress : queueData?.data.progress ?? 0
+
+  if (!queueData) {
+    return null
+  }
 
   return (
     <div className="min-h-screen">
