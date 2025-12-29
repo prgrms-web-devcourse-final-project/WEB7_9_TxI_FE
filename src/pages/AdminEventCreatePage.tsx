@@ -95,14 +95,12 @@ export default function AdminEventCreatePage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 파일 크기 검증 (예: 10MB 제한)
     const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {
       toast.error('이미지 크기는 10MB 이하여야 합니다')
       return
     }
 
-    // 파일 확장자 검증
     const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']
     const fileExtension = file.name.split('.').pop()?.toLowerCase()
     if (!fileExtension || !validExtensions.includes(fileExtension)) {

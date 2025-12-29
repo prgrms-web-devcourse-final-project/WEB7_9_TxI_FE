@@ -46,7 +46,6 @@ export default function AdminEventEditPage() {
     status: 'READY',
   })
 
-  // 날짜와 시간을 분리하여 저장
   const [dateTimeFields, setDateTimeFields] = useState({
     eventDate: { date: '', time: '' },
     preOpenAt: { date: '', time: '' },
@@ -63,16 +62,13 @@ export default function AdminEventEditPage() {
     throwOnError: false,
   })
 
-  // 날짜와 시간을 분리하는 헬퍼 함수 (로컬 타임존 고려)
   const splitDateTime = (dateTimeString: string) => {
     if (!dateTimeString) {
       return { date: '', time: '' }
     }
     
-    // ISO 형식 문자열을 파싱 (예: "2024-01-15T14:30:00" 또는 "2024-01-15T14:30:00.000Z")
     const date = new Date(dateTimeString)
     
-    // 유효한 날짜인지 확인
     if (isNaN(date.getTime())) {
       console.warn('Invalid date string:', dateTimeString)
       return { date: '', time: '' }
@@ -95,7 +91,6 @@ export default function AdminEventEditPage() {
     if (eventData?.data) {
       const event = eventData.data as EventResponse
       
-      // 날짜와 시간 분리
       const ticketOpenDateTime = splitDateTime(event.ticketOpenAt)
       const preOpenDateTime = splitDateTime(event.preOpenAt)
       const preCloseDateTime = splitDateTime(event.preCloseAt)
@@ -187,14 +182,12 @@ export default function AdminEventEditPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 파일 크기 검증 (예: 10MB 제한)
     const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {
       toast.error('이미지 크기는 10MB 이하여야 합니다')
       return
     }
 
-    // 파일 확장자 검증
     const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']
     const fileExtension = file.name.split('.').pop()?.toLowerCase()
     if (!fileExtension || !validExtensions.includes(fileExtension)) {
@@ -260,7 +253,6 @@ export default function AdminEventEditPage() {
       return
     }
 
-    // 날짜와 시간을 ISO 형식으로 변환
     const combineDateTime = (date: string, time: string) => {
       if (!date || !time) return ''
       return `${date}T${time}:00`
