@@ -86,10 +86,12 @@ export function NotificationDropdown() {
               {notifications.map((notification) => (
                 <Card
                   key={notification.id}
-                  className={`p-3 cursor-pointer hover:border-blue-600/50 transition-colors ${
-                    !notification.read ? 'border-blue-600/30 bg-blue-600/5' : ''
+                  className={`p-3 transition-colors ${
+                    !notification.read
+                      ? 'cursor-pointer hover:border-blue-600/50 border-blue-600/30 bg-blue-600/5'
+                      : 'cursor-default'
                   } ${isMarkingAsRead ? 'opacity-50 pointer-events-none' : ''}`}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => !notification.read && markAsRead(notification.id)}
                 >
                   <div className="flex items-start gap-3">
                     <Badge className={`${getTypeColor(notification.type)} text-xs`}>
