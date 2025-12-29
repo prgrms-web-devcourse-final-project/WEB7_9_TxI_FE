@@ -49,6 +49,7 @@ export interface EventResponse {
   eventDate: string
   maxTicketAmount: number
   status: EventStatus
+  deleted?: boolean
 }
 
 export interface AdminEventDashboardResponse {
@@ -58,21 +59,5 @@ export interface AdminEventDashboardResponse {
   preRegisterCount: number
   totalSoldSeats: number
   totalSalesAmount: number
-}
-
-export interface AdminEventListResponse {
-  id: number
-  title: string
-  category: EventCategory
-  place: string
-  imageUrl?: string
-  minPrice: number
-  maxPrice: number
-  preOpenAt: string
-  preCloseAt: string
-  ticketOpenAt: string
-  ticketCloseAt: string
-  eventDate: string
-  status: EventStatus
-  createdAt: string
+  deleted?: boolean
 }

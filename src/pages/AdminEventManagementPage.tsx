@@ -7,17 +7,8 @@ import { useAuthStore } from '@/stores/authStore'
 import { getRoleFromToken } from '@/utils/auth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
-import {
-  ArrowLeft,
-  Edit,
-  Trash2,
-  Calendar,
-  MapPin,
-  Users,
-  Ticket,
-  Activity,
-} from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Edit, Trash2, Calendar, MapPin, Users, Ticket, Activity } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import type { EventStatus } from '@/types/event'
 
@@ -28,7 +19,9 @@ const getStatusBadge = (status: EventStatus) => {
     case 'PRE_OPEN':
       return <Badge className="bg-blue-100 text-blue-700 border-blue-300">사전등록 진행중</Badge>
     case 'PRE_CLOSED':
-      return <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">사전등록 마감</Badge>
+      return (
+        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">사전등록 마감</Badge>
+      )
     case 'QUEUE_READY':
       return <Badge className="bg-purple-100 text-purple-700 border-purple-300">대기열 준비</Badge>
     case 'OPEN':
@@ -65,6 +58,10 @@ export default function AdminEventManagementPage() {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [eventId])
+
   const { data: eventData, isLoading } = useQuery({
     queryKey: ['admin', 'event', eventId],
     queryFn: () => adminEventsApi.getEventByIdForAdmin(eventId),
@@ -80,13 +77,17 @@ export default function AdminEventManagementPage() {
   })
 
   const event = eventData?.data
-  const dashboardEvent = dashboardData?.data?.find((e) => e.eventId === Number(eventId))
+  const dashboardEvent = dashboardData?.data
+    ?.filter((e) => e.deleted !== true)
+    ?.find((e) => e.eventId === Number(eventId))
 
   const deleteEventMutation = useMutation({
     mutationFn: () => adminEventsApi.deleteEvent(Number(eventId)),
     onSuccess: () => {
+      setIsDeleteModalOpen(false)
       toast.success('이벤트가 삭제되었습니다')
       queryClient.invalidateQueries({ queryKey: ['admin', 'events', 'dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'event', eventId] })
       navigate({ to: '/admin' })
     },
     onError: (error: Error) => {
@@ -134,9 +135,10 @@ export default function AdminEventManagementPage() {
     )
   }
 
-  const salesRate = dashboardEvent
-    ? (dashboardEvent.totalSoldSeats / (dashboardEvent.totalSoldSeats + 0)) * 100
-    : 0
+  const salesRate =
+    dashboardEvent && event.maxTicketAmount > 0
+      ? (dashboardEvent.totalSoldSeats / event.maxTicketAmount) * 100
+      : 0
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -153,7 +155,9 @@ export default function AdminEventManagementPage() {
             <div>
               <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
               <div className="flex items-center gap-2 mb-4">
-                <Badge className="bg-gray-100 text-gray-700 border-gray-300">{getCategoryLabel(event.category)}</Badge>
+                <Badge className="bg-gray-100 text-gray-700 border-gray-300">
+                  {getCategoryLabel(event.category)}
+                </Badge>
                 {getStatusBadge(event.status)}
               </div>
             </div>
@@ -222,7 +226,7 @@ export default function AdminEventManagementPage() {
                     />
                   </div>
                   <span className="text-sm font-semibold w-16 text-right">
-                    {salesRate.toFixed(1)}%
+                    {isNaN(salesRate) ? '0.0' : salesRate.toFixed(1)}%
                   </span>
                 </div>
                 <div className="mt-2 text-sm text-gray-600 font-bold">
@@ -306,4 +310,3 @@ export default function AdminEventManagementPage() {
     </div>
   )
 }
-

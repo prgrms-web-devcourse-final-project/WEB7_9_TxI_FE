@@ -1,5 +1,7 @@
 import { apiClient } from '@/lib/axios'
+import type { AxiosError } from 'axios'
 import type { ApiResponse } from '@/types/api'
+import type { PageResponse } from '@/types/event'
 import type { Seat } from '@/types/seat'
 import type {
   AutoCreateSeatsRequest,
@@ -145,17 +147,72 @@ export const adminSeatsApi = {
     return response.data
   },
 
-  getSeatsByEvent: async (eventId: string): Promise<ApiResponse<Seat[]>> => {
-    const response = await apiClient.get<ApiResponse<Seat[]>>(`${BASE_URL}/${eventId}/seats`)
-
-    if (response.data.status === '400 BAD_REQUEST') {
-      throw Error(response.data.message)
+  getSeatsByEvent: async (
+    eventId: string,
+    page: number = 0,
+    size: number = 20,
+  ): Promise<ApiResponse<PageResponse<Seat>>> => {
+    const emptyResponse: ApiResponse<PageResponse<Seat>> = {
+      status: '200 OK',
+      message: '좌석 항목이 없습니다',
+      data: {
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
+        size: size,
+        number: page,
+        sort: {
+          empty: true,
+          sorted: false,
+          unsorted: true,
+        },
+        numberOfElements: 0,
+        pageable: {
+          offset: page * size,
+          sort: {
+            empty: true,
+            sorted: false,
+            unsorted: true,
+          },
+          paged: true,
+          pageNumber: page,
+          pageSize: size,
+          unpaged: false,
+        },
+        first: page === 0,
+        last: true,
+        empty: true,
+      },
     }
 
-    if (response.data.status === '500 INTERNAL_SERVER_ERROR') {
-      throw Error(response.data.message)
-    }
+    try {
+      const response = await apiClient.get<ApiResponse<PageResponse<Seat>>>(
+        `${BASE_URL}/${eventId}/seats`,
+        {
+          params: { page, size },
+          validateStatus: (status) => status < 500,
+        },
+      )
 
-    return response.data
+      if (response.status === 404 || response.data?.status === '404 NOT_FOUND') {
+        return emptyResponse
+      }
+
+      if (response.data.status === '400 BAD_REQUEST') {
+        throw Error(response.data.message)
+      }
+
+      if (response.data.status === '500 INTERNAL_SERVER_ERROR') {
+        throw Error(response.data.message)
+      }
+
+      return response.data
+    } catch (error) {
+      const axiosError = error as AxiosError<{ status: string; message: string }>
+      if (axiosError?.response?.status === 404) {
+        return emptyResponse
+      }
+      throw error
+    }
   },
 }

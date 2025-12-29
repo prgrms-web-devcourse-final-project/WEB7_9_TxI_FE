@@ -1,47 +1,42 @@
 import { adminQueuesApi } from '@/api/admin/queue'
 import { adminPreRegistersApi } from '@/api/admin/preRegister'
 import { adminEventsApi } from '@/api/admin/events'
-import { ConfirmModal } from '@/components/ConfirmModal'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
 import { Pagination } from '@/components/ui/Pagination'
 import { useAuthStore } from '@/stores/authStore'
 import { getRoleFromToken } from '@/utils/auth'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
 import {
   ArrowLeft,
   Activity,
   Users,
-  Shuffle,
-  Search,
 } from 'lucide-react'
-import { useState } from 'react'
-import { toast } from 'sonner'
+import { useState, useEffect } from 'react'
 
 export default function AdminQueueManagementPage() {
   const { eventId } = useParams({ from: '/admin/queue/$eventId' })
   const { isAuthenticated, accessToken } = useAuthStore()
-  const queryClient = useQueryClient()
-
   const userRole = getRoleFromToken(accessToken)
   const isAdmin = userRole === 'ADMIN'
   
   const hasAuth = isAuthenticated || !!accessToken
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isShuffleModalOpen, setIsShuffleModalOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
   const pageSize = 20
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [eventId])
 
   const { data: eventData, error: eventError } = useQuery({
     queryKey: ['admin', 'event', eventId],
     queryFn: () => adminEventsApi.getEventByIdForAdmin(eventId),
     enabled: hasAuth && isAdmin,
-    retry: false, // 에러 발생 시 재시도하지 않음
-    throwOnError: false, // 에러를 ErrorBoundary로 전파하지 않음
+    retry: false,
+    throwOnError: false, 
   })
 
   const { data: queueStatsData, isLoading: isStatsLoading } = useQuery({
@@ -80,31 +75,6 @@ export default function AdminQueueManagementPage() {
     throwOnError: false,
   })
 
-  const shuffleMutation = useMutation({
-    mutationFn: (data: { preRegisteredUserIds: number[] }) =>
-      adminQueuesApi.shuffleQueue(Number(eventId), data),
-    onSuccess: () => {
-      toast.success('대기열이 랜덤하게 재배정되었습니다')
-      queryClient.invalidateQueries({ queryKey: ['admin', 'queue', 'statistics', eventId] })
-      queryClient.invalidateQueries({ queryKey: ['admin', 'queue', 'entries', eventId] })
-    },
-    onError: (error: Error) => {
-      toast.error(error.message)
-    },
-  })
-
-  const handleManualShuffle = async () => {
-    // 사전등록된 사용자 ID 목록을 가져와야 함
-    // TODO: 실제 API에서 사전등록 사용자 목록을 가져오는 로직 추가
-    const queueEntries = queueEntriesData?.data?.content || []
-    const preRegisteredUserIds = queueEntries
-      .filter((u) => u.queueEntryStatus === 'WAITING' || u.queueEntryStatus === 'ENTERED')
-      .map((u) => u.id)
-
-    shuffleMutation.mutate({ preRegisteredUserIds })
-    setIsShuffleModalOpen(false)
-  }
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -116,16 +86,8 @@ export default function AdminQueueManagementPage() {
   const preRegisters = preRegisterData?.data?.content || []
   const preRegisterTotalPages = preRegisterData?.data?.totalPages || 0
 
-  // 대기열 데이터가 있으면 대기열, 없으면 사전등록 데이터 필터링
-  const filteredUsers = hasQueueData
-    ? queueEntries.filter(
-        (user) =>
-          user.userEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.queueRank.toString().includes(searchQuery),
-      )
-    : preRegisters.filter((preRegister) =>
-        preRegister.userEmail.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
+  // 대기열 데이터가 있으면 대기열, 없으면 사전등록 데이터 사용
+  const displayData = hasQueueData ? queueEntries : preRegisters
 
   const showQueueTable = hasQueueData
   const hasPreRegisterData = preRegisters.length > 0
@@ -206,7 +168,7 @@ export default function AdminQueueManagementPage() {
           )}
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <Users className="w-8 h-8 text-purple-600" />
@@ -220,15 +182,6 @@ export default function AdminQueueManagementPage() {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <Users className="w-8 h-8 text-blue-600" />
-              <Badge
-                className={
-                  queueStatus.isActive
-                    ? 'bg-blue-100 text-blue-700 border-blue-300'
-                    : 'bg-gray-100 text-gray-700 border-gray-300'
-                }
-              >
-                {queueStatus.isActive ? '활성' : '일시정지'}
-              </Badge>
             </div>
             <div className="text-3xl font-bold mb-1">
               {queueStatus.waitingCount.toLocaleString()}
@@ -245,35 +198,33 @@ export default function AdminQueueManagementPage() {
             </div>
             <div className="text-sm text-gray-600">현재 입장 인원</div>
           </Card>
-        </div>
 
-        <Card className="p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">대기열 제어</h2>
-            <Button onClick={() => setIsShuffleModalOpen(true)}>
-              <Shuffle className="w-4 h-4 mr-2" />
-              수동 셔플
-            </Button>
-          </div>
-        </Card>
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Activity className="w-8 h-8 text-green-600" />
+            </div>
+            <div className="text-3xl font-bold mb-1">
+              {(queueStats?.completedCount || 0).toLocaleString()}
+            </div>
+            <div className="text-sm text-gray-600">결제 완료 인원</div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Activity className="w-8 h-8 text-red-600" />
+            </div>
+            <div className="text-3xl font-bold mb-1">
+              {(queueStats?.expiredCount || 0).toLocaleString()}
+            </div>
+            <div className="text-sm text-gray-600">시간 만료 인원</div>
+          </Card>
+        </div>
 
         <Card className="p-6">
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl font-bold">
-                {showQueueTable ? '대기열 사용자 목록' : '사전 등록 사용자 목록'}
-              </h2>
-              <div className="flex items-center gap-2">
-                <Search className="w-4 h-4 text-gray-500" />
-                <Input
-                  type="text"
-                  placeholder={showQueueTable ? '이름, 이메일, 순번 검색...' : '이메일 검색...'}
-                  className="w-64"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
+            <h2 className="text-xl font-bold mb-2">
+              {showQueueTable ? '대기열 사용자 목록' : '사전 등록 사용자 목록'}
+            </h2>
             {!showQueueTable && eventData?.data?.ticketOpenAt && (
               <p className="text-sm text-blue-600 mt-2">
                 {(() => {
@@ -316,14 +267,14 @@ export default function AdminQueueManagementPage() {
               </thead>
               <tbody>
                 {showQueueTable ? (
-                  filteredUsers.length === 0 ? (
+                  displayData.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-center py-12 text-gray-500">
-                        {searchQuery ? '검색 결과가 없습니다' : '대기열 항목이 없습니다'}
+                        대기열 항목이 없습니다
                       </td>
                     </tr>
                   ) : (
-                    (filteredUsers as typeof queueEntries).map((entry) => (
+                    (displayData as typeof queueEntries).map((entry) => (
                       <tr
                         key={entry.id}
                         className="border-b border-gray-200 hover:bg-gray-50"
@@ -352,18 +303,16 @@ export default function AdminQueueManagementPage() {
                     ))
                   )
                 ) : (
-                  filteredUsers.length === 0 ? (
+                  displayData.length === 0 ? (
                     <tr>
                       <td colSpan={2} className="text-center py-12 text-gray-500">
-                        {searchQuery
-                          ? '검색 결과가 없습니다'
-                          : isEmpty
-                            ? '등록된 항목이 없습니다'
-                            : '사전 등록 항목이 없습니다'}
+                        {isEmpty
+                          ? '등록된 항목이 없습니다'
+                          : '사전 등록 항목이 없습니다'}
                       </td>
                     </tr>
                   ) : (
-                    (filteredUsers as typeof preRegisters).map((preRegister) => (
+                    (displayData as typeof preRegisters).map((preRegister) => (
                       <tr
                         key={preRegister.id}
                         className="border-b border-gray-200 hover:bg-gray-50"
@@ -380,29 +329,17 @@ export default function AdminQueueManagementPage() {
             </table>
           </div>
 
-          {!searchQuery &&
-            (showQueueTable ? totalPages > 1 : preRegisterTotalPages > 1) && (
-              <div className="mt-6">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={showQueueTable ? totalPages : preRegisterTotalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
+          {(showQueueTable ? totalPages > 1 : preRegisterTotalPages > 1) && (
+            <div className="mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={showQueueTable ? totalPages : preRegisterTotalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
         </Card>
       </main>
-
-      <ConfirmModal
-        open={isShuffleModalOpen}
-        onOpenChange={setIsShuffleModalOpen}
-        onConfirm={handleManualShuffle}
-        title="수동 셔플"
-        description="대기열 순서를 랜덤하게 재배정하시겠습니까?"
-        confirmText="셔플"
-        cancelText="취소"
-        isLoading={shuffleMutation.isPending}
-      />
     </div>
   )
 }

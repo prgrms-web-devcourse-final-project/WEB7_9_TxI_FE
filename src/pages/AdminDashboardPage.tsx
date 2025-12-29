@@ -24,13 +24,13 @@ export default function AdminDashboardPage() {
   
   const hasAuth = isAuthenticated || !!accessToken
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['admin', 'events', 'dashboard'],
     queryFn: () => adminEventsApi.getEventsDashboard(),
     enabled: hasAuth && isAdmin,
   })
 
-  const eventStats = data?.data || []
+  const eventStats = (data?.data || []).filter((event) => event.deleted !== true)
 
   const stats = [
     {
@@ -148,9 +148,6 @@ export default function AdminDashboardPage() {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">이벤트 현황</h2>
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
-                새로고침
-              </Button>
             </div>
             <div className="space-y-6">
               {eventStats.length === 0 ? (

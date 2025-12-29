@@ -3,8 +3,6 @@ import type { AxiosError } from 'axios'
 import type { ApiResponse } from '@/types/api'
 import type { PageResponse } from '@/types/event'
 import type {
-  ShuffleQueueRequest,
-  ShuffleQueueResponse,
   QueueStatisticsResponse,
   QueueEntryListResponse,
 } from '@/types/admin/queue'
@@ -12,33 +10,6 @@ import type {
 const BASE_URL = '/admin/queues'
 
 export const adminQueuesApi = {
-  shuffleQueue: async (
-    eventId: number,
-    data: ShuffleQueueRequest,
-  ): Promise<ApiResponse<ShuffleQueueResponse>> => {
-    const response = await apiClient.post<ApiResponse<ShuffleQueueResponse>>(
-      `${BASE_URL}/${eventId}/shuffle`,
-      data,
-    )
-
-    if (response.data.status === '400 BAD_REQUEST') {
-      throw Error(response.data.message)
-    }
-
-    if (response.data.status === '404 NOT_FOUND') {
-      throw Error(response.data.message)
-    }
-
-    if (response.data.status === '409 CONFLICT') {
-      throw Error(response.data.message)
-    }
-
-    if (response.data.status === '500 INTERNAL_SERVER_ERROR') {
-      throw Error(response.data.message)
-    }
-
-    return response.data
-  },
 
   getQueueStatistics: async (eventId: number): Promise<ApiResponse<QueueStatisticsResponse>> => {
     const emptyStatisticsResponse: ApiResponse<QueueStatisticsResponse> = {
@@ -50,6 +21,7 @@ export const adminQueuesApi = {
         waitingCount: 0,
         enteredCount: 0,
         expiredCount: 0,
+        completedCount: 0,
         progress: 0,
       },
     }

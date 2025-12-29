@@ -14,6 +14,7 @@ export interface QueueStatisticsResponse {
   waitingCount: number
   enteredCount: number
   expiredCount: number
+  completedCount: number
   progress: number
 }
 

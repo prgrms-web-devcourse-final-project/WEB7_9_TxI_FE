@@ -6,22 +6,13 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
+import { Pagination } from '@/components/ui/Pagination'
 import { useAuthStore } from '@/stores/authStore'
 import { getRoleFromToken } from '@/utils/auth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
-import {
-  ArrowLeft,
-  Plus,
-  Grid3x3,
-  Trash2,
-  Edit,
-  Save,
-  X,
-  Upload,
-  Activity,
-} from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Plus, Grid3x3, Trash2, Edit, Save, X, Activity } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import type { Seat } from '@/types/seat'
 import type { SeatGrade } from '@/types/admin/seat'
@@ -37,14 +28,17 @@ export default function AdminSeatManagementPage() {
   const hasAuth = isAuthenticated || !!accessToken
 
   const [editingSeat, setEditingSeat] = useState<number | null>(null)
-  const [showBulkCreate, setShowBulkCreate] = useState(false)
   const [showAutoCreate, setShowAutoCreate] = useState(false)
   const [showSingleCreate, setShowSingleCreate] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false)
   const [selectedSeatId, setSelectedSeatId] = useState<number | null>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageSize = 20
 
-  const [bulkSeats, setBulkSeats] = useState('')
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [eventId])
 
   // Auto create form
   const [autoRows, setAutoRows] = useState(10)
@@ -72,29 +66,20 @@ export default function AdminSeatManagementPage() {
   })
 
   const { data: seatsData, isLoading } = useQuery({
-    queryKey: ['admin', 'seats', eventId],
-    queryFn: () => adminSeatsApi.getSeatsByEvent(eventId),
+    queryKey: ['admin', 'seats', eventId, currentPage],
+    queryFn: () => adminSeatsApi.getSeatsByEvent(eventId, currentPage, pageSize),
     enabled: hasAuth && isAdmin,
   })
 
-  const seats = seatsData?.data || []
+  const seats = seatsData?.data?.content || []
+  const totalPages = seatsData?.data?.totalPages || 0
+  const totalElements = seatsData?.data?.totalElements || 0
   const eventTitle = eventData?.data?.title || `이벤트 ID: ${eventId}`
 
-  const bulkCreateMutation = useMutation({
-    mutationFn: (seats: Array<{ seatCode: string; grade: SeatGrade; price: number }>) =>
-      adminSeatsApi.bulkCreateSeats(Number(eventId), { seats }),
-    onSuccess: () => {
-      toast.success('좌석이 대량 생성되었습니다')
-      setBulkSeats('')
-      setShowBulkCreate(false)
-      queryClient.invalidateQueries({ queryKey: ['admin', 'seats', eventId] })
-    },
-    onError: (error: Error) => {
-      toast.error('좌석 생성 실패', {
-        description: error.message || 'CSV 형식을 확인해주세요',
-      })
-    },
-  })
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const autoCreateMutation = useMutation({
     mutationFn: () =>
@@ -106,7 +91,7 @@ export default function AdminSeatManagementPage() {
       }),
     onSuccess: () => {
       const totalSeats = autoRows * autoCols
-      toast.success(`${totalSeats}개의 좌석이 자동 생성되었습니다`)
+      toast.success(`${totalSeats}개의 좌석이 대량 자동 생성되었습니다`)
       setShowAutoCreate(false)
       queryClient.invalidateQueries({ queryKey: ['admin', 'seats', eventId] })
     },
@@ -185,37 +170,6 @@ export default function AdminSeatManagementPage() {
       })
     },
   })
-
-  const handleBulkCreate = () => {
-    try {
-      const lines = bulkSeats.trim().split('\n').filter((line) => line.trim())
-      const newSeats = lines.map((line) => {
-        const parts = line.split(',').map((p) => p.trim())
-        if (parts.length < 3) {
-          throw new Error('CSV 형식이 올바르지 않습니다: seatCode,grade,price 형식으로 입력해주세요')
-        }
-        const [seatCode, grade, priceStr] = parts
-        const price = Number.parseInt(priceStr, 10)
-        if (isNaN(price)) {
-          throw new Error('가격은 숫자여야 합니다')
-        }
-        if (!['VIP', 'R', 'S', 'A', 'B', 'C'].includes(grade)) {
-          throw new Error('등급은 VIP, R, S, A, B, C 중 하나여야 합니다')
-        }
-        return {
-          seatCode,
-          grade: grade as SeatGrade,
-          price,
-        }
-      })
-
-      bulkCreateMutation.mutate(newSeats)
-    } catch (error) {
-      toast.error('좌석 생성 실패', {
-        description: error instanceof Error ? error.message : 'CSV 형식을 확인해주세요',
-      })
-    }
-  }
 
   const handleAutoCreate = () => {
     autoCreateMutation.mutate()
@@ -299,7 +253,7 @@ export default function AdminSeatManagementPage() {
           <div>
             <h1 className="text-3xl font-bold mb-2">좌석 관리</h1>
             <p className="text-gray-600">
-              {eventTitle} - 총 {seats.length}석
+              {eventTitle} - 총 {totalElements}석
             </p>
             {eventError && (
               <p className="text-sm text-orange-600 mt-1">
@@ -314,11 +268,7 @@ export default function AdminSeatManagementPage() {
             </Button>
             <Button variant="outline" onClick={() => setShowAutoCreate(!showAutoCreate)}>
               <Grid3x3 className="w-4 h-4 mr-2" />
-              자동 생성
-            </Button>
-            <Button variant="outline" onClick={() => setShowBulkCreate(!showBulkCreate)}>
-              <Upload className="w-4 h-4 mr-2" />
-              대량 생성
+              자동 대량 생성
             </Button>
             <Button variant="outline" onClick={handleDeleteAllSeats}>
               <Trash2 className="w-4 h-4 mr-2" />
@@ -336,7 +286,7 @@ export default function AdminSeatManagementPage() {
                 <Input
                   value={singleSeatCode}
                   onChange={(e) => setSingleSeatCode(e.target.value)}
-                  placeholder="예: VIP-A-1, R석-B-5"
+                  placeholder="예: VIP1, A1"
                 />
               </div>
               <div>
@@ -350,8 +300,6 @@ export default function AdminSeatManagementPage() {
                   <option value="R">R석</option>
                   <option value="S">S석</option>
                   <option value="A">A석</option>
-                  <option value="B">B석</option>
-                  <option value="C">C석</option>
                 </select>
               </div>
               <div>
@@ -376,7 +324,7 @@ export default function AdminSeatManagementPage() {
 
         {showAutoCreate && (
           <Card className="p-6 mb-6">
-            <h3 className="font-bold mb-4">좌석 자동 생성 (행 × 열)</h3>
+            <h3 className="font-bold mb-4">좌석 대량 자동 생성 (행 × 열)</h3>
             <div className="grid grid-cols-4 gap-4 mb-4">
               <div>
                 <Label>행 수</Label>
@@ -405,8 +353,6 @@ export default function AdminSeatManagementPage() {
                   <option value="R">R석</option>
                   <option value="S">S석</option>
                   <option value="A">A석</option>
-                  <option value="B">B석</option>
-                  <option value="C">C석</option>
                 </select>
               </div>
               <div>
@@ -418,37 +364,14 @@ export default function AdminSeatManagementPage() {
                 />
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-4">총 {autoRows * autoCols}개의 좌석이 생성됩니다</p>
+            <p className="text-sm text-gray-600 mb-4">
+              총 {autoRows * autoCols}개의 좌석이 생성됩니다
+            </p>
             <div className="flex gap-2">
               <Button onClick={handleAutoCreate} disabled={autoCreateMutation.isPending}>
                 {autoCreateMutation.isPending ? '생성 중...' : '생성'}
               </Button>
               <Button variant="outline" onClick={() => setShowAutoCreate(false)}>
-                취소
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {showBulkCreate && (
-          <Card className="p-6 mb-6">
-            <h3 className="font-bold mb-4">대량 좌석 생성 (CSV)</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              CSV 형식으로 입력해주세요: 좌석코드,등급,가격 (한 줄에 하나씩)
-              <br />
-              예: VIP-A-1,VIP,150000
-            </p>
-            <textarea
-              className="w-full h-32 border border-gray-300 rounded-lg p-3 mb-4 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-              value={bulkSeats}
-              onChange={(e) => setBulkSeats(e.target.value)}
-              placeholder="VIP-A-1,VIP,150000&#10;VIP-A-2,VIP,150000&#10;R석-B-1,R,120000"
-            />
-            <div className="flex gap-2">
-              <Button onClick={handleBulkCreate} disabled={bulkCreateMutation.isPending}>
-                {bulkCreateMutation.isPending ? '생성 중...' : '생성'}
-              </Button>
-              <Button variant="outline" onClick={() => setShowBulkCreate(false)}>
                 취소
               </Button>
             </div>
@@ -499,8 +422,6 @@ export default function AdminSeatManagementPage() {
                             <option value="R">R석</option>
                             <option value="S">S석</option>
                             <option value="A">A석</option>
-                            <option value="B">B석</option>
-                            <option value="C">C석</option>
                           </select>
                         ) : (
                           seat.grade
@@ -558,10 +479,18 @@ export default function AdminSeatManagementPage() {
                             </>
                           ) : (
                             <>
-                              <Button size="sm" variant="ghost" onClick={() => handleEditSeat(seat)}>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditSeat(seat)}
+                              >
                                 <Edit className="w-4 h-4" />
                               </Button>
-                              <Button size="sm" variant="ghost" onClick={() => handleDeleteSeat(seat.id)}>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteSeat(seat.id)}
+                              >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </>
@@ -575,6 +504,16 @@ export default function AdminSeatManagementPage() {
             </table>
           </div>
         </Card>
+
+        {totalPages > 1 && (
+          <div className="mt-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
       </main>
 
       <ConfirmModal
@@ -609,4 +548,3 @@ export default function AdminSeatManagementPage() {
     </div>
   )
 }
-
