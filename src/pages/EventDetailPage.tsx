@@ -40,11 +40,12 @@ export default function EventDetailPage() {
     enabled: isAuthenticated,
   })
 
-  const { data: queueStatusData } = useQuery({
+  const { data: queueStatusData, error: queueStatusError } = useQuery({
     queryKey: ['queueStatus', id],
     queryFn: () => queueApi.getQueueStatus(id),
     enabled: isAuthenticated && event.status === 'OPEN',
     retry: false,
+    throwOnError: false,
   })
 
   const deletePreRegisterMutation = useMutation({
@@ -112,6 +113,13 @@ export default function EventDetailPage() {
         if (!registered) {
           return {
             text: '사전 등록 필요',
+            disabled: true,
+            onClick: () => {},
+          }
+        }
+        if (!queueStatusData || queueStatusError) {
+          return {
+            text: '대기열에 없습니다',
             disabled: true,
             onClick: () => {},
           }
