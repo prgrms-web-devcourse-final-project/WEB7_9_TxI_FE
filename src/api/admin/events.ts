@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
+import type { PageResponse } from '@/types/event'
 import type {
   EventCreateRequest,
   EventUpdateRequest,
@@ -71,9 +72,15 @@ export const adminEventsApi = {
     return response.data
   },
 
-  getEventsDashboard: async (): Promise<ApiResponse<AdminEventDashboardResponse[]>> => {
-    const response = await apiClient.get<ApiResponse<AdminEventDashboardResponse[]>>(
+  getEventsDashboard: async (
+    page: number = 0,
+    size: number = 20,
+  ): Promise<ApiResponse<PageResponse<AdminEventDashboardResponse>>> => {
+    const response = await apiClient.get<ApiResponse<PageResponse<AdminEventDashboardResponse>>>(
       `${BASE_URL}/dashboard`,
+      {
+        params: { page, size },
+      },
     )
 
     if (response.data.status === '500 INTERNAL_SERVER_ERROR') {

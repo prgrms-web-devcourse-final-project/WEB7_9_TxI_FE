@@ -2,6 +2,7 @@ import { adminEventsApi } from '@/api/admin/events'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { Pagination } from '@/components/ui/Pagination'
 import { useAuthStore } from '@/stores/authStore'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
@@ -15,6 +16,7 @@ import {
   Plus,
 } from 'lucide-react'
 import { getRoleFromToken } from '@/utils/auth'
+import { useState } from 'react'
 
 export default function AdminDashboardPage() {
   const { isAuthenticated, accessToken } = useAuthStore()
@@ -24,13 +26,22 @@ export default function AdminDashboardPage() {
   
   const hasAuth = isAuthenticated || !!accessToken
 
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageSize = 20
+
   const { data, isLoading } = useQuery({
-    queryKey: ['admin', 'events', 'dashboard'],
-    queryFn: () => adminEventsApi.getEventsDashboard(),
+    queryKey: ['admin', 'events', 'dashboard', currentPage],
+    queryFn: () => adminEventsApi.getEventsDashboard(currentPage, pageSize),
     enabled: hasAuth && isAdmin,
   })
 
-  const eventStats = (data?.data || []).filter((event) => event.deleted !== true)
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const eventStats = (data?.data?.content || []).filter((event) => event.deleted !== true)
+  const totalPages = data?.data?.totalPages || 0
 
   const stats = [
     {
@@ -210,6 +221,16 @@ export default function AdminDashboardPage() {
             </div>
           </Card>
         </div>
+
+        {totalPages > 1 && (
+          <div className="mt-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
       </main>
     </div>
   )
