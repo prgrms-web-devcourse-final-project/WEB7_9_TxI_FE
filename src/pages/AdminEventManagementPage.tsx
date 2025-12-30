@@ -77,7 +77,7 @@ export default function AdminEventManagementPage() {
   })
 
   const event = eventData?.data
-  const dashboardEvent = dashboardData?.data
+  const dashboardEvent = dashboardData?.data?.content
     ?.filter((e) => e.deleted !== true)
     ?.find((e) => e.eventId === Number(eventId))
 
