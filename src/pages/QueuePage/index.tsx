@@ -4,7 +4,7 @@ import { queueApi } from '@/api/queue'
 import { seatsApi } from '@/api/seats'
 import { PaymentSuccessModal } from '@/components/PaymentSuccessModal'
 import { useQueueWebSocket } from '@/hooks/useQueueWebSocket'
-import { useMutation, useQuery, useSuspenseQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -21,6 +21,7 @@ import { useQueueExitGuard } from './hooks/useQueueExitGuard'
 export default function QueuePage() {
   const navigate = useNavigate()
   const { id } = useParams({ from: '/events/$id/queue' })
+  const queryClient = useQueryClient()
 
   const { data: queueData } = useSuspenseQuery({
     queryKey: ['queueStatus', id],
@@ -65,6 +66,8 @@ export default function QueuePage() {
   const [orderData, setOrderData] = useState<CreateOrderResponse | null>(null)
   const [paymentResult, setPaymentResult] = useState<ConfirmPaymentResponse | null>(null)
   const [isExitConfirmModalOpen, setIsExitConfirmModalOpen] = useState(false)
+  const [isMovingToBack, setIsMovingToBack] = useState(false)
+  const [isProcessingPersonalEvent, setIsProcessingPersonalEvent] = useState(false)
 
   const {
     queuePosition,
@@ -97,6 +100,7 @@ export default function QueuePage() {
     onExitAttempt: () => setIsExitConfirmModalOpen(true),
   })
 
+
   useEffect(() => {
     if ((step === 'ready' || step === 'purchase' || step === 'payment') && !isRunning) {
       start()
@@ -104,39 +108,57 @@ export default function QueuePage() {
   }, [step, isRunning, start])
 
   useEffect(() => {
-    if (queueData === null) {
+    if (!personalEvent) {
+      return
+    }
+
+    setIsProcessingPersonalEvent(true)
+
+    if ('enteredAt' in personalEvent) {
+      if (step !== 'ready' && step !== 'purchase' && step !== 'payment') {
+        setStep('ready')
+        start()
+        queryClient.invalidateQueries({ queryKey: ['queueStatus', id] })
+      }
+    } else if ('expiredAt' in personalEvent) {
       navigate({ to: '/events' })
-      toast.error('대기열에 없습니다.')
+    } else if ('completedAt' in personalEvent) {
+      navigate({ to: '/my-tickets' })
+    }
+    
+    clearPersonalEvent()
+    
+    setTimeout(() => {
+      setIsProcessingPersonalEvent(false)
+    }, 100)
+  }, [personalEvent, clearPersonalEvent, navigate, start, queryClient, id, step])
+
+  useEffect(() => {
+    if (!queueData) {
+      return
+    }
+
+    if (isExitConfirmModalOpen || isMovingToBack || isProcessingPersonalEvent) {
       return
     }
 
     const status = queueData.data.status
 
-    if (status === 'WAITING' && step !== 'waiting' && step !== 'purchase' && step !== 'payment') {
-      setStep('waiting')
-    } else if (status === 'ENTERED' && step === 'waiting') {
-      setStep('ready')
-      start()
+    if (status === 'ENTERED') {
+      if (step === 'waiting') {
+        setStep('ready')
+        start()
+      }
+    } else if (status === 'WAITING') {
+      if (step === 'ready' || step === 'purchase' || step === 'payment') {
+        setStep('waiting')
+      }
     } else if (status === 'EXPIRED') {
       navigate({ to: '/events' })
     } else if (status === 'COMPLETED') {
       navigate({ to: '/my-tickets' })
     }
-  }, [queueData, step, navigate, start])
-
-  useEffect(() => {
-    if (personalEvent) {
-      if ('enteredAt' in personalEvent) {
-        setStep('ready')
-        start()
-      } else if ('expiredAt' in personalEvent) {
-        navigate({ to: '/events' })
-      } else if ('completedAt' in personalEvent) {
-        navigate({ to: '/my-tickets' })
-      }
-      clearPersonalEvent()
-    }
-  }, [personalEvent, clearPersonalEvent, navigate, start])
+  }, [queueData, step, navigate, start, isExitConfirmModalOpen, isMovingToBack, isProcessingPersonalEvent])
 
   const handlePurchase = async () => {
     if (selectedSeats.length === 0) {
@@ -206,14 +228,14 @@ export default function QueuePage() {
     )
   }
 
-  const currentPosition = queuePosition ?? queueData?.data.queueRank ?? 0
-  const currentWaitingAhead = waitingAhead ?? queueData?.data.waitingAhead ?? 0
-  const currentEstimatedTime = estimatedWaitTime ?? queueData?.data.estimatedWaitTime ?? 0
-  const currentProgress = progress != null ? progress : queueData?.data.progress ?? 0
-
   if (!queueData) {
     return null
   }
+
+  const currentPosition = queuePosition ?? queueData.data.queueRank ?? 0
+  const currentWaitingAhead = waitingAhead ?? queueData.data.waitingAhead ?? 0
+  const currentEstimatedTime = estimatedWaitTime ?? queueData.data.estimatedWaitTime ?? 0
+  const currentProgress = progress != null ? progress : queueData.data.progress ?? 0
 
   return (
     <div className="min-h-screen">
@@ -273,8 +295,10 @@ export default function QueuePage() {
         open={isExitConfirmModalOpen}
         onOpenChange={setIsExitConfirmModalOpen}
         onConfirm={async () => {
-          await moveToBackAndNavigate()
+          setIsMovingToBack(true)
           setIsExitConfirmModalOpen(false)
+          await moveToBackAndNavigate()
+          queryClient.invalidateQueries({ queryKey: ['queueStatus', id] })
         }}
         title="페이지를 나가시겠습니까?"
         description="나가시면 순번이 맨 뒤로 이동합니다. 그래도 나가시겠습니까?"

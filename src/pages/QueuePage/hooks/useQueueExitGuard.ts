@@ -116,7 +116,6 @@ export function useQueueExitGuard({
 
   const moveToBackAndNavigate = async () => {
     isNavigatingRef.current = true
-    handlersRegisteredRef.current = false
 
     if (handlePopStateRef.current) {
       window.removeEventListener('popstate', handlePopStateRef.current)
