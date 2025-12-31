@@ -8,6 +8,7 @@ interface UseQueueExitGuardParams {
   eventId: string
   enabled: boolean
   onExitAttempt: () => void
+  isPaymentInProgress?: boolean  // 결제 진행 중 플래그
 }
 
 interface UseQueueExitGuardReturn {
@@ -18,6 +19,7 @@ export function useQueueExitGuard({
   eventId,
   enabled,
   onExitAttempt,
+  isPaymentInProgress = false,
 }: UseQueueExitGuardParams): UseQueueExitGuardReturn {
   const navigate = useNavigate()
   const { accessToken } = useAuthStore()
@@ -61,7 +63,13 @@ export function useQueueExitGuard({
 
     const handlePageHide = (e: PageTransitionEvent) => {
       if (!handlersRegisteredRef.current) return
-      
+
+      // 결제 진행 중이면 move-to-back 호출 안 함
+      if (isPaymentInProgress) {
+        console.log('[QueueExitGuard] 결제 진행 중이므로 move-to-back 스킵')
+        return
+      }
+
       if (!e.persisted) {
         callMoveToBackApi()
       }
@@ -112,7 +120,7 @@ export function useQueueExitGuard({
       document.removeEventListener('click', handleClick, true)
       handlePopStateRef.current = null
     }
-  }, [enabled, onExitAttempt, eventId, accessToken])
+  }, [enabled, onExitAttempt, eventId, accessToken, isPaymentInProgress])
 
   const moveToBackAndNavigate = async () => {
     isNavigatingRef.current = true
