@@ -11,6 +11,7 @@ export interface SignupRequest {
   year: string
   month: string
   day: string
+  businessNumber?: string
 }
 
 export interface AuthData {
