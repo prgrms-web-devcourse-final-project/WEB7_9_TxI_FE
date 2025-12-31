@@ -15,6 +15,7 @@ import type { SignupRequest } from '@/types/auth'
 import { signupFormSchema } from '@/utils/validation'
 import { useForm } from '@tanstack/react-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
 interface Props {
@@ -26,6 +27,7 @@ interface Props {
 export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
   const { setUser, setAccessToken } = useAuthStore()
   const queryClient = useQueryClient()
+  const [accountType, setAccountType] = useState<'user' | 'admin'>('user')
 
   const signupMutation = useMutation({
     mutationFn: authApi.signup,
@@ -39,8 +41,14 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
       birthDate: '',
       password: '',
       passwordConfirm: '',
+      businessNumber: '',
     },
     onSubmit: async ({ value }) => {
+      if (accountType === 'admin' && !value.businessNumber) {
+        toast.error('사업자등록번호를 입력해주세요.')
+        return
+      }
+
       const [year, month, day] = value.birthDate.split('-')
 
       const signupData: SignupRequest = {
@@ -51,6 +59,7 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
         year,
         month,
         day,
+        ...(accountType === 'admin' && value.businessNumber && { businessNumber: value.businessNumber }),
       }
 
       signupMutation.mutate(signupData, {
@@ -93,13 +102,44 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
           <DialogDescription>WaitFair에 가입하여 티켓을 예매하세요</DialogDescription>
         </DialogHeader>
 
+        <div className="flex border-b border-border mb-6 mt-4 bg-gray-50 rounded-t-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => {
+              setAccountType('user')
+              form.reset()
+            }}
+            className={`flex-1 py-3.5 text-center font-semibold transition-all relative ${
+              accountType === 'user'
+                ? 'text-primary bg-white shadow-sm border-b-2 border-primary'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            일반사용자
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAccountType('admin')
+              form.reset()
+            }}
+            className={`flex-1 py-3.5 text-center font-semibold transition-all relative ${
+              accountType === 'admin'
+                ? 'text-primary bg-white shadow-sm border-b-2 border-primary'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            상점관리자
+          </button>
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault()
             e.stopPropagation()
             form.handleSubmit()
           }}
-          className="space-y-4 mt-4"
+          className="space-y-4"
         >
           <form.Field
             name="fullName"
@@ -242,6 +282,38 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
               />
             )}
           </form.Field>
+
+          {accountType === 'admin' && (
+            <form.Field
+              name="businessNumber"
+              validators={{
+                onChange: ({ value }) => {
+                  if (!value) {
+                    return '사업자등록번호를 입력해주세요.'
+                  }
+                  // 사업자등록번호 형식 검증 (000-00-00000)
+                  const businessNumberRegex = /^\d{3}-\d{2}-\d{5}$/
+                  if (!businessNumberRegex.test(value)) {
+                    return '사업자등록번호 형식이 올바르지 않습니다. (예: 000-00-00000)'
+                  }
+                  return undefined
+                },
+              }}
+            >
+              {(field) => (
+                <Input
+                  type="text"
+                  label="사업자등록번호"
+                  placeholder="000-00-00000"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+                  error={field.state.meta.errors.join(', ')}
+                  disabled={signupMutation.isPending}
+                />
+              )}
+            </form.Field>
+          )}
 
           <div className="flex gap-3 pt-2">
             <Button
