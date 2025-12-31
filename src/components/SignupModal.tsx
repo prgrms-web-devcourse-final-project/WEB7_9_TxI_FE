@@ -15,7 +15,7 @@ import type { SignupRequest } from '@/types/auth'
 import { signupFormSchema } from '@/utils/validation'
 import { useForm } from '@tanstack/react-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 interface Props {
@@ -93,13 +93,25 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
     },
   })
 
+  // 모달이 열릴 때마다 일반 사용자 탭으로 리셋
+  useEffect(() => {
+    if (open) {
+      setAccountType('user')
+      form.reset()
+    }
+  }, [open, form])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogClose onClose={() => onOpenChange(false)} />
         <DialogHeader>
           <DialogTitle>회원가입</DialogTitle>
-          <DialogDescription>WaitFair에 가입하여 티켓을 예매하세요</DialogDescription>
+          <DialogDescription>
+            {accountType === 'user'
+              ? 'WaitFair에 가입하여 티켓을 예매하세요'
+              : 'WaitFair에 가입하여 이벤트를 공정하고 효율적으로 운영하세요'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex border-b border-border mb-6 mt-4 bg-gray-50 rounded-t-lg overflow-hidden">
@@ -291,7 +303,6 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
                   if (!value) {
                     return '사업자등록번호를 입력해주세요.'
                   }
-                  // 사업자등록번호 형식 검증 (000-00-00000)
                   const businessNumberRegex = /^\d{3}-\d{2}-\d{5}$/
                   if (!businessNumberRegex.test(value)) {
                     return '사업자등록번호 형식이 올바르지 않습니다. (예: 000-00-00000)'
