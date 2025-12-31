@@ -1,4 +1,4 @@
-import type { ConfirmPaymentResponse, CreateOrderResponse, PrepareOrderResponse } from '@/api/order'
+import type { ConfirmPaymentResponse, CreateOrderResponse, PrepareOrderResponse } from '@/types/order'
 import { orderApi } from '@/api/order'
 import { queueApi } from '@/api/queue'
 import { seatsApi } from '@/api/seats'
@@ -309,9 +309,6 @@ export default function QueuePage() {
               eventId={id}
               selectedSeats={selectedSeats}
               orderData={tossOrderData}
-              onPaymentRequest={async () => {
-                // 토스페이먼츠 결제는 위젯에서 처리하므로 여기서는 아무것도 하지 않음
-              }}
               onPaymentStart={() => {
                 // 결제 시작 시 플래그 설정
                 console.log('[QueuePage] 결제 시작 - move-to-back 비활성화')

@@ -6,13 +6,12 @@ import { useTossPayments } from '@/hooks/useTossPayments'
 import { seatsApi } from '@/api/seats'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { CheckCircle2, Lock, AlertCircle } from 'lucide-react'
-import type { PrepareOrderResponse } from '@/api/order'
+import type { PrepareOrderResponse } from '@/types/order'
 
 interface TossPaymentStepProps {
   eventId: string
   selectedSeats: number[]
   orderData: PrepareOrderResponse
-  onPaymentRequest: () => Promise<void>
   onPaymentStart?: () => void  // 결제 시작 콜백
 }
 
@@ -20,7 +19,6 @@ export function TossPaymentStep({
   eventId,
   selectedSeats,
   orderData,
-  onPaymentRequest,
   onPaymentStart,
 }: TossPaymentStepProps) {
   const paymentWidgetRef = useRef<HTMLDivElement>(null)

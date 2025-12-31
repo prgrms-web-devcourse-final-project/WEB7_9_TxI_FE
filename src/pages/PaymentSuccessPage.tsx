@@ -3,7 +3,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router'
 import { orderApi } from '@/api/order'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import type { V2_PaymentConfirmResponse } from '@/api/order'
+import type { V2_PaymentConfirmResponse } from '@/types/order'
 
 export default function PaymentSuccessPage() {
   const navigate = useNavigate()
