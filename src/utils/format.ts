@@ -17,3 +17,18 @@ export const formatDateTime = (dateString: string) => {
 export const formatPriceRange = (min: number, max: number) => {
   return `${min.toLocaleString()}원 ~ ${max.toLocaleString()}원`
 }
+
+export const formatBusinessNumber = (value: string) => {
+  // 숫자만 추출
+  const numbersOnly = value.replace(/\D/g, '').slice(0, 10)
+
+  if (numbersOnly.length <= 3) {
+    return numbersOnly
+  }
+
+  if (numbersOnly.length <= 5) {
+    return `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3)}`
+  }
+
+  return `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3, 5)}-${numbersOnly.slice(5)}`
+}
