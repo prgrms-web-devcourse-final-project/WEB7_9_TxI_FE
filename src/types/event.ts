@@ -20,6 +20,7 @@ export interface Event {
   preCloseAt: string
   ticketOpenAt: string
   ticketCloseAt?: string
+  eventDate: string
   maxTicketAmount?: number
   status: EventStatus
   createdAt?: string
