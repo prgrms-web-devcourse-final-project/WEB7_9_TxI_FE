@@ -1,3 +1,5 @@
+import type { UserRole } from "./user"
+
 export interface LoginRequest {
   email: string
   password: string
@@ -8,10 +10,11 @@ export interface SignupRequest {
   password: string
   fullName: string
   nickname: string
+  role: UserRole
   year: string
   month: string
   day: string
-  businessNumber?: string
+  registrationNumber?: string
 }
 
 export interface AuthData {

@@ -9,6 +9,7 @@ import { Route as eventQueueRoute } from "./routes/events/$id/queue";
 import { Route as myTicketsRoute } from "./routes/my-tickets";
 import { Route as myPageRoute } from "./routes/my-page";
 import { Route as ticketsVerifyRoute } from "./routes/tickets.verify";
+import { Route as paymentSuccessRoute } from "./routes/payment-success";
 import { Route as adminRoute } from "./routes/admin";
 import { Route as adminQueueRoute } from "./routes/admin/queue.$eventId";
 import { Route as adminSeatsRoute } from "./routes/admin/seats.$eventId";
@@ -26,6 +27,7 @@ const routeTree = rootRoute.addChildren([
   myTicketsRoute,
   myPageRoute,
   ticketsVerifyRoute,
+  paymentSuccessRoute,
   adminRoute,
   adminQueueRoute,
   adminSeatsRoute,
