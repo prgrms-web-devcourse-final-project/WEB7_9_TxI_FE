@@ -62,16 +62,16 @@ export function EventFilterSection({
   ]
 
   return (
-    <section className="py-6 bg-white">
+    <section className="py-6 bg-white sticky top-[73px] z-40 backdrop-blur-sm bg-white/95">
       <div className="container mx-auto px-4">
         <div className="space-y-4">
-          <div className="flex items-center gap-6 border-b border-gray-200">
+          <div className="flex items-center gap-6 border-b border-gray-200 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setCategoryFilter(undefined)}
-              className={`pb-3 px-1 font-medium text-lg transition-colors ${
+              className={`pb-3 px-2 font-medium text-base md:text-lg transition-all whitespace-nowrap ${
                 categoryFilter === undefined
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
+                  : 'text-gray-600 hover:text-gray-900 hover:border-b-2 hover:border-gray-300'
               }`}
             >
               전체
@@ -81,10 +81,10 @@ export function EventFilterSection({
                 <button
                   key={category}
                   onClick={() => setCategoryFilter(category)}
-                  className={`pb-3 px-1 font-medium text-lg transition-colors ${
+                  className={`pb-3 px-2 font-medium text-base md:text-lg transition-all whitespace-nowrap ${
                     categoryFilter === category
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
+                      : 'text-gray-600 hover:text-gray-900 hover:border-b-2 hover:border-gray-300'
                   }`}
                 >
                   {label}
@@ -93,24 +93,24 @@ export function EventFilterSection({
             )}
           </div>
 
-          <div className="flex items-center gap-2" ref={dropdownRef}>
+          <div className="flex items-center gap-3" ref={dropdownRef}>
             <label className="text-sm font-semibold text-gray-700">상태</label>
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px] justify-between"
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px] justify-between transition-all shadow-sm hover:shadow-md"
               >
                 <span>{getStatusLabel()}</span>
                 <ChevronDown
-                  className={`w-4 h-4 transition-transform ${
+                  className={`w-4 h-4 transition-transform duration-300 ${
                     isDropdownOpen ? 'rotate-180' : ''
                   }`}
                 />
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-fade-in">
                   {statusOptions.map((option) => (
                     <button
                       key={option.value || 'all'}
@@ -119,15 +119,15 @@ export function EventFilterSection({
                         setStatusFilter(option.value)
                         setIsDropdownOpen(false)
                       }}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-orange-50 transition-colors flex items-center justify-between ${
+                      className={`w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 transition-all flex items-center justify-between ${
                         statusFilter === option.value
-                          ? 'bg-orange-50 text-gray-900'
+                          ? 'bg-blue-50 text-blue-700 font-medium'
                           : 'text-gray-700'
                       }`}
                     >
                       <span>{option.label}</span>
                       {statusFilter === option.value && (
-                        <Check className="w-4 h-4 text-orange-600" />
+                        <Check className="w-4 h-4 text-blue-600" />
                       )}
                     </button>
                   ))}

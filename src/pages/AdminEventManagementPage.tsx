@@ -15,21 +15,21 @@ import type { EventStatus } from '@/types/event'
 const getStatusBadge = (status: EventStatus) => {
   switch (status) {
     case 'READY':
-      return <Badge className="bg-gray-100 text-gray-700 border-gray-300">준비중</Badge>
+      return <Badge className="bg-gray-100 text-gray-700 border-gray-300 border-none">오픈 준비중</Badge>
     case 'PRE_OPEN':
-      return <Badge className="bg-blue-100 text-blue-700 border-blue-300">사전등록 진행중</Badge>
+      return <Badge className="bg-blue-100 text-blue-700 border-blue-300 border-none">사전등록 진행중</Badge>
     case 'PRE_CLOSED':
       return (
-        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">사전등록 마감</Badge>
+        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300 border-none">사전등록 마감</Badge>
       )
     case 'QUEUE_READY':
-      return <Badge className="bg-purple-100 text-purple-700 border-purple-300">대기열 준비</Badge>
+      return <Badge className="bg-purple-100 text-purple-700 border-purple-300 border-none">대기열 준비 완료</Badge>
     case 'OPEN':
-      return <Badge className="bg-green-100 text-green-700 border-green-300">판매중</Badge>
+      return <Badge className="bg-green-100 text-green-700 border-green-300 border-none">티켓팅 진행중</Badge>
     case 'CLOSED':
-      return <Badge className="bg-red-100 text-red-700 border-red-300">판매 종료</Badge>
+      return <Badge className="bg-red-100 text-red-700 border-red-300 border-none">티켓팅 마감</Badge>
     default:
-      return <Badge className="bg-gray-100 text-gray-700 border-gray-300">{status}</Badge>
+      return <Badge className="bg-gray-100 text-gray-700 border-gray-300 border-none">{status}</Badge>
   }
 }
 
@@ -155,7 +155,7 @@ export default function AdminEventManagementPage() {
             <div>
               <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
               <div className="flex items-center gap-2 mb-4">
-                <Badge className="bg-gray-100 text-gray-700 border-gray-300">
+                <Badge className="bg-gray-100 text-gray-700 border-gray-300 border-none">
                   {getCategoryLabel(event.category)}
                 </Badge>
                 {getStatusBadge(event.status)}

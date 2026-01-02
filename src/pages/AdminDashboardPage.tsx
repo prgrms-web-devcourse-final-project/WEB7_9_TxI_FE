@@ -80,21 +80,21 @@ export default function AdminDashboardPage() {
     switch (status) {
       case 'PRE_OPEN':
         return (
-          <Badge className="bg-blue-100 text-blue-700 border-blue-300">
+          <Badge className="bg-blue-100 text-blue-700 border-blue-300 border-none">
             <Clock className="w-3 h-3 mr-1" />
             사전등록중
           </Badge>
         )
       case 'OPEN':
         return (
-          <Badge className="bg-green-100 text-green-700 border-green-300">
+          <Badge className="bg-green-100 text-green-700 border-green-300 border-none">
             <Activity className="w-3 h-3 mr-1" />
             티켓팅 진행중
           </Badge>
         )
       case 'CLOSED':
         return (
-          <Badge className="bg-gray-100 text-gray-700 border-gray-300">
+          <Badge className="bg-gray-100 text-gray-700 border-gray-300 border-none">
             <CheckCircle2 className="w-3 h-3 mr-1" />
             완료
           </Badge>

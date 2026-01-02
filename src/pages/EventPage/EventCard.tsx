@@ -59,34 +59,43 @@ export function EventCard({ event }: { event: Event }) {
 
   return (
     <Link to="/events/$id" params={{ id: String(event.id) }}>
-      <Card className="h-[460px] overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+      <Card className="group h-[460px] overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 border-gray-200 hover:border-blue-300 hover:-translate-y-2 bg-white">
         <div className="aspect-video relative overflow-hidden bg-gray-100">
-          <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
-          <Badge className={`absolute top-3 right-3 ${statusColors[displayStatus] || ''}`}>
+          <img 
+            src={event.imageUrl} 
+            alt={event.title} 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <Badge className={`absolute top-3 right-3 ${statusColors[displayStatus] || ''} shadow-lg backdrop-blur-sm`}>
             {displayStatus}
           </Badge>
         </div>
         <div className="p-5">
-          <Badge className="mb-3 bg-gray-200 border-none">{EVENT_CATEGORY_MAP[event.category] || event.category}</Badge>
-          <h3 className="text-xl font-bold mb-1">{event.title}</h3>
+          <Badge className="mb-3 bg-gray-100 border-none text-gray-700 group-hover:bg-gray-200 transition-colors">
+            {EVENT_CATEGORY_MAP[event.category] || event.category}
+          </Badge>
+          <h3 className="text-xl font-bold mb-2 text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+            {event.title}
+          </h3>
 
-          <div className="space-y-2 mb-4">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <MapPin className="w-4 h-4" />
-              <span>{event.place}</span>
+          <div className="space-y-2.5 mb-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
+              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <span className="break-keep break-words">{event.place}</span>
             </div>
             {dateInfo && (
               <>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>
+                <div className="flex items-center gap-2 text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
+                  <Calendar className="w-4 h-4 flex-shrink-0" />
+                  <span className="break-keep break-words">
                     {dateInfo.label}: {dateInfo.date}
                   </span>
                 </div>
                 {dateInfo.secondLabel && dateInfo.secondDate && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="w-4 h-4" />
-                    <span>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
+                    <Calendar className="w-4 h-4 flex-shrink-0" />
+                    <span className="break-keep break-words">
                       {dateInfo.secondLabel}: {dateInfo.secondDate}
                     </span>
                   </div>
