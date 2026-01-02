@@ -116,8 +116,7 @@ export function QrCodeSection({ ticketId, eventDate }: QrCodeSectionProps) {
             <div className="flex items-center justify-center gap-2 text-sm text-gray-600 bg-blue-50 px-4 py-3 rounded-lg">
               <span className="text-blue-600">ℹ️</span>
               <p>
-                QR 코드는 이벤트 시작일인 {formatEventDate(eventDate)} 부터 확인할 수
-                있습니다.
+                QR 코드는 이벤트 시작일인 {formatEventDate(eventDate)} 부터 확인할 수 있습니다.
               </p>
             </div>
           </div>
