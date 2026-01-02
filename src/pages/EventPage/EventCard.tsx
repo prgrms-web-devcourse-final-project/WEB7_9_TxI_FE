@@ -29,12 +29,12 @@ const EVENT_CATEGORY_MAP: Record<EventCategory, string> = {
 }
 
 const statusColors: Record<string, string> = {
-  '티켓팅 진행중': 'bg-blue-100 text-blue-700 border-blue-300',
-  '사전등록 진행중': 'bg-green-100 text-green-700 border-green-300',
-  '사전등록 마감': 'bg-gray-100 text-gray-600 border-gray-300',
-  '티켓팅 마감': 'bg-gray-100 text-gray-600 border-gray-300',
-  '오픈 준비중': 'bg-yellow-100 text-yellow-700 border-yellow-300',
-  '대기열 준비 완료': 'bg-orange-100 text-orange-700 border-orange-300',
+  '티켓팅 진행중': 'bg-blue-100 text-blue-700 border-none',
+  '사전등록 진행중': 'bg-green-100 text-green-700 border-none',
+  '사전등록 마감': 'bg-gray-100 text-gray-600 border-none',
+  '티켓팅 마감': 'bg-gray-100 text-gray-600 border-none',
+  '오픈 준비중': 'bg-yellow-100 text-yellow-700 border-none',
+  '대기열 준비 완료': 'bg-orange-100 text-orange-700 border-none',
 }
 
 export function EventCard({ event }: { event: Event }) {
@@ -67,7 +67,7 @@ export function EventCard({ event }: { event: Event }) {
           </Badge>
         </div>
         <div className="p-5">
-          <Badge className="mb-3">{EVENT_CATEGORY_MAP[event.category] || event.category}</Badge>
+          <Badge className="mb-3 bg-gray-200 border-none">{EVENT_CATEGORY_MAP[event.category] || event.category}</Badge>
           <h3 className="text-xl font-bold mb-1">{event.title}</h3>
 
           <div className="space-y-2 mb-4">

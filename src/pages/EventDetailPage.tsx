@@ -92,7 +92,7 @@ export default function EventDetailPage() {
     switch (status) {
       case 'READY':
         return {
-          text: '준비중',
+          text: '오픈 준비중',
           disabled: true,
           onClick: () => {},
         }
