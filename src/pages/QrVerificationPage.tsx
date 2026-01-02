@@ -154,7 +154,7 @@ export default function QrVerificationPage() {
                 <MapPin className="w-5 h-5 text-blue-600 mt-1" />
                 <div>
                   <p className="font-medium">이벤트</p>
-                  <p className="text-gray-900 text-lg font-semibold">{event.title}</p>
+                  <p className="text-gray-600">{event.title}</p>
                 </div>
               </div>
               {eventDate && (
@@ -170,10 +170,10 @@ export default function QrVerificationPage() {
               )}
               {qrIssuedAt && (
                 <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-gray-400 mt-1" />
+                  <Calendar className="w-5 h-5 text-blue-600 mt-1" />
                   <div>
-                    <p className="font-medium text-gray-500 text-sm">QR 발급 시간</p>
-                    <p className="text-gray-600 text-sm">
+                    <p className="font-medium">QR 발급 시간</p>
+                    <p className="text-gray-600">
                       {qrIssuedAt.date} {qrIssuedAt.time}
                     </p>
                   </div>
@@ -215,8 +215,8 @@ export default function QrVerificationPage() {
               <div className="flex items-start gap-3">
                 <TicketIcon className="w-5 h-5 text-blue-600 mt-1" />
                 <div className="flex-1">
-                  <p className="font-medium text-gray-700">이벤트</p>
-                  <p className="text-gray-900 text-lg font-semibold">
+                  <p className="font-medium">이벤트</p>
+                  <p className="text-gray-600">
                     {validationResult.eventTitle}
                   </p>
                 </div>
@@ -225,8 +225,8 @@ export default function QrVerificationPage() {
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-blue-600 mt-1" />
                 <div>
-                  <p className="font-medium text-gray-700">좌석</p>
-                  <p className="text-gray-900">
+                  <p className="font-medium">좌석</p>
+                  <p className="text-gray-600">
                     {validationResult.seatCode || '좌석 없음'}
                   </p>
                 </div>
@@ -235,17 +235,17 @@ export default function QrVerificationPage() {
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-blue-600 mt-1" />
                 <div>
-                  <p className="font-medium text-gray-700">티켓 소유자</p>
-                  <p className="text-gray-900">{validationResult.ownerNickname}</p>
+                  <p className="font-medium">티켓 소유자</p>
+                  <p className="text-gray-600">{validationResult.ownerNickname}</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-blue-600 mt-1" />
                 <div>
-                  <p className="font-medium text-gray-700">이벤트 일시</p>
+                  <p className="font-medium">이벤트 일시</p>
                   {eventDate && (
-                    <p className="text-gray-900">
+                    <p className="text-gray-600">
                       {eventDate.date} {eventDate.time}
                     </p>
                   )}
@@ -254,10 +254,10 @@ export default function QrVerificationPage() {
 
               {qrIssuedAt && (
                 <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-gray-400 mt-1" />
+                  <Calendar className="w-5 h-5 text-blue-600 mt-1" />
                   <div>
-                    <p className="font-medium text-gray-500 text-sm">QR 발급 시간</p>
-                    <p className="text-gray-600 text-sm">
+                    <p className="font-medium">QR 발급 시간</p>
+                    <p className="text-gray-600">
                       {qrIssuedAt.date} {qrIssuedAt.time}
                     </p>
                   </div>
@@ -292,7 +292,8 @@ export default function QrVerificationPage() {
                   ⚠️ 관리자 전용 기능
                 </p>
                 <p className="text-xs text-amber-700">
-                  이 기능은 관리자 전용입니다. 입장 처리를 진행하면 즉시 입장이 확정됩니다.
+                  이 기능은 관리자 전용입니다. 
+                  입장 처리를 진행하면 즉시 입장이 확정됩니다.
                   관계자 외 사용을 금지합니다.
                 </p>
               </div>

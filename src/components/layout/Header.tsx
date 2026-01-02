@@ -54,35 +54,39 @@ export function Header({ onLoginClick, onSignupClick }: HeaderProps) {
   return (
     <header className="border-b border-gray-200 bg-white/95 backdrop-blur sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to={isAdminPage ? '/admin' : '/'} className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Ticket className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-bold">{isAdmin ? 'WaitFair Admin' : 'WaitFair'}</span>
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link to={isAdminPage ? '/admin' : '/'} className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Ticket className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold">{isAdmin ? 'WaitFair Admin' : 'WaitFair'}</span>
+          </Link>
 
-        {!isAdmin && (
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              to="/events"
-              className={`text-sm transition-colors ${
-                isActive('/events')
-                  ? 'text-blue-600 font-medium'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              이벤트
-            </Link>
-            <Link
-              to="/faq"
-              className={`text-sm transition-colors ${
-                isActive('/faq') ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              FAQ
-            </Link>
-          </nav>
-        )}
+          {!isAdmin && (
+            <nav className="hidden md:flex items-center gap-8">
+              <Link
+                to="/"
+                className={`text-base transition-colors text-lg ${
+                  isActive('/')
+                    ? 'text-blue-600 font-medium'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                홈
+              </Link>
+              <Link
+                to="/events"
+                className={`text-base transition-colors text-lg ${
+                  isActive('/events')
+                    ? 'text-blue-600 font-medium'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                이벤트
+              </Link>
+            </nav>
+          )}
+        </div>
 
         <div className="flex items-center gap-3">
           {isAdmin ? (

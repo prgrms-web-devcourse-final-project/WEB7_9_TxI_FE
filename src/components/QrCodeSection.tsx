@@ -16,22 +16,20 @@ interface QrCodeSectionProps {
 
 export function QrCodeSection({ ticketId, eventDate }: QrCodeSectionProps) {
   const [qrUrl, setQrUrl] = useState<string | null>(null)
-  const [expirationSecond, setExpirationSecond] = useState<number>(60)
   const [refreshIntervalSecond, setRefreshIntervalSecond] = useState<number>(30)
-  const [timeUntilExpiry, setTimeUntilExpiry] = useState<number>(0)
-  const [tokenIssuedAt, setTokenIssuedAt] = useState<number | null>(null)
+  const [timeUntilRefresh, setTimeUntilRefresh] = useState<number>(30)
+  const [lastRefreshTime, setLastRefreshTime] = useState<number | null>(null)
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const expiryTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const generateQrTokenMutation = useMutation({
     mutationFn: () => ticketsApi.generateQrToken(ticketId),
     onSuccess: (response) => {
       const data = response.data
       setQrUrl(data.qrUrl)
-      setExpirationSecond(data.expirationSecond)
       setRefreshIntervalSecond(data.refreshIntervalSecond)
-      setTokenIssuedAt(Date.now())
-      setTimeUntilExpiry(data.expirationSecond)
+      setLastRefreshTime(Date.now())
+      setTimeUntilRefresh(data.refreshIntervalSecond)
     },
     onError: (error) => {
       console.error('QR 토큰 발급 실패:', error)
@@ -69,27 +67,28 @@ export function QrCodeSection({ ticketId, eventDate }: QrCodeSectionProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEventStarted, qrUrl, refreshIntervalSecond])
 
-  // 만료 카운트다운
+  // 카운트다운 타이머
   useEffect(() => {
-    if (!isEventStarted || !tokenIssuedAt) return
+    if (!isEventStarted || !qrUrl || !lastRefreshTime) return
 
-    expiryTimerRef.current = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - tokenIssuedAt) / 1000)
-      const remaining = Math.max(0, expirationSecond - elapsed)
-      setTimeUntilExpiry(remaining)
+    countdownTimerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - lastRefreshTime) / 1000)
+      const remaining = Math.max(0, refreshIntervalSecond - elapsed)
+      setTimeUntilRefresh(remaining)
 
+      // 카운트다운이 0에 도달하면 자동 갱신
       if (remaining === 0 && !generateQrTokenMutation.isPending) {
         generateQrTokenMutation.mutate()
       }
     }, 1000)
 
     return () => {
-      if (expiryTimerRef.current) {
-        clearInterval(expiryTimerRef.current)
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEventStarted, tokenIssuedAt, expirationSecond])
+  }, [isEventStarted, qrUrl, lastRefreshTime, refreshIntervalSecond])
 
   // 컴포넌트 언마운트 시 타이머 정리
   useEffect(() => {
@@ -97,8 +96,8 @@ export function QrCodeSection({ ticketId, eventDate }: QrCodeSectionProps) {
       if (refreshTimerRef.current) {
         clearInterval(refreshTimerRef.current)
       }
-      if (expiryTimerRef.current) {
-        clearInterval(expiryTimerRef.current)
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current)
       }
     }
   }, [])
@@ -154,17 +153,9 @@ export function QrCodeSection({ ticketId, eventDate }: QrCodeSectionProps) {
                   <span>QR 코드 갱신 중...</span>
                 </div>
               ) : (
-                <>
-                  <p>
-                    <span className="font-medium">{refreshIntervalSecond}초</span> 후 자동
-                    갱신
-                  </p>
-                  {timeUntilExpiry > 0 && (
-                    <p>
-                      만료까지 <span className="font-medium">{timeUntilExpiry}초</span> 남음
-                    </p>
-                  )}
-                </>
+                <p>
+                  <span className="font-medium">{timeUntilRefresh}초</span> 후 자동 갱신
+                </p>
               )}
             </div>
           </>

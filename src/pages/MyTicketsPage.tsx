@@ -74,7 +74,7 @@ export default function MyTicketsPage() {
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <h3 className="text-xl font-bold">{preRegister.eventTitle}</h3>
-                        <Badge className="bg-green-100 text-green-800">사전등록</Badge>
+                        <Badge className="bg-green-100 text-green-800 border-none">사전등록</Badge>
                       </div>
                       <div className="space-y-2 text-sm text-gray-600 mb-4">
                         <div className="flex items-center gap-2">

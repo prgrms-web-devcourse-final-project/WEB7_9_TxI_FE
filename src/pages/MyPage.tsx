@@ -13,7 +13,7 @@ import { useForm } from '@tanstack/react-form'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import dayjs from 'dayjs'
-import { Calendar, Mail, User } from 'lucide-react'
+import { Calendar, Clock, Mail, User } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -137,33 +137,44 @@ export default function MyPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>이름</Label>
-                <Input value={userData.data.fullName} disabled />
+                <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
+                  <User className="w-4 h-4 text-gray-600" />
+                  <span>{userData.data.fullName}</span>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label>이메일</Label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
                   <Mail className="w-4 h-4 text-gray-600" />
-                  <Input value={userData.data.email} disabled />
+                  <span>{userData.data.email}</span>
                 </div>
+                <p className="text-xs text-gray-500">이메일은 변경할 수 없습니다</p>
               </div>
 
               <div className="space-y-2">
                 <Label>닉네임</Label>
-                <Input value={userData.data.nickname} disabled />
+                <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
+                  <User className="w-4 h-4 text-gray-600" />
+                  <span>{userData.data.nickname}</span>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label>생년월일</Label>
-                <Input value={userData.data.birthDate} disabled />
+                <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
+                  <Calendar className="w-4 h-4 text-gray-600" />
+                  <span>{userData.data.birthDate}</span>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label>가입일</Label>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-600" />
-                  <Input value={dayjs(userData.data.signupDate).format('YYYY-MM-DD')} disabled />
+                <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
+                  <Clock className="w-4 h-4 text-gray-600" />
+                  <span>{dayjs(userData.data.signupDate).format('YYYY-MM-DD')}</span>
                 </div>
+                <p className="text-xs text-gray-500">가입일은 변경할 수 없습니다</p>
               </div>
             </div>
           ) : (
@@ -185,24 +196,40 @@ export default function MyPage() {
                 }}
               >
                 {(field) => (
-                  <Input
-                    label="이름"
-                    placeholder="홍길동"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    error={field.state.meta.errors.join(', ')}
-                    disabled={updateMutation.isPending}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">이름</Label>
+                    <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
+                      <User className="w-4 h-4 text-gray-600" />
+                      <Input
+                        id="fullName"
+                        placeholder="홍길동"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        error={field.state.meta.errors.join(', ')}
+                        disabled={updateMutation.isPending}
+                        className="bg-transparent border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-xs text-red-600">{field.state.meta.errors.join(', ')}</p>
+                    )}
+                  </div>
                 )}
               </form.Field>
 
               <div className="space-y-2">
-                <Label>이메일</Label>
-                <div className="flex items-center gap-2">
+                <Label htmlFor="email">이메일</Label>
+                <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
                   <Mail className="w-4 h-4 text-gray-600" />
-                  <Input value={userData.data.email} disabled />
+                  <Input
+                    id="email"
+                    value={userData.data.email}
+                    disabled
+                    className="bg-transparent border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
                 </div>
+                <p className="text-xs text-gray-500">이메일은 변경할 수 없습니다</p>
               </div>
 
               <form.Field
@@ -215,15 +242,25 @@ export default function MyPage() {
                 }}
               >
                 {(field) => (
-                  <Input
-                    label="닉네임"
-                    placeholder="3~10자"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    error={field.state.meta.errors.join(', ')}
-                    disabled={updateMutation.isPending}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="nickname">닉네임</Label>
+                    <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
+                      <User className="w-4 h-4 text-gray-600" />
+                      <Input
+                        id="nickname"
+                        placeholder="3~10자"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        error={field.state.meta.errors.join(', ')}
+                        disabled={updateMutation.isPending}
+                        className="bg-transparent border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-xs text-red-600">{field.state.meta.errors.join(', ')}</p>
+                    )}
+                  </div>
                 )}
               </form.Field>
 
@@ -237,24 +274,39 @@ export default function MyPage() {
                 }}
               >
                 {(field) => (
-                  <Input
-                    type="date"
-                    label="생년월일"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    error={field.state.meta.errors.join(', ')}
-                    disabled={updateMutation.isPending}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="birthdate">생년월일</Label>
+                    <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
+                      <Calendar className="w-4 h-4 text-gray-600" />
+                      <Input
+                        id="birthdate"
+                        type="date"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        error={field.state.meta.errors.join(', ')}
+                        disabled={updateMutation.isPending}
+                        className="bg-transparent border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-xs text-red-600">{field.state.meta.errors.join(', ')}</p>
+                    )}
+                  </div>
                 )}
               </form.Field>
 
               <div className="space-y-2">
                 <Label>가입일</Label>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-600" />
-                  <Input value={dayjs(userData.data.signupDate).format('YYYY-MM-DD')} disabled />
+                <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
+                  <Clock className="w-4 h-4 text-gray-600" />
+                  <Input
+                    value={dayjs(userData.data.signupDate).format('YYYY-MM-DD')}
+                    disabled
+                    className="bg-transparent border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
                 </div>
+                <p className="text-xs text-gray-500">가입일은 변경할 수 없습니다</p>
               </div>
 
               <div className="flex gap-3 pt-2">
