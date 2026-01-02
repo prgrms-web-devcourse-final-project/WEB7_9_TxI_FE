@@ -2,6 +2,7 @@ import type { ConfirmPaymentResponse, CreateOrderResponse, PrepareOrderResponse 
 import { orderApi } from '@/api/order'
 import { queueApi } from '@/api/queue'
 import { seatsApi } from '@/api/seats'
+import { eventsApi } from '@/api/events'
 import { PaymentSuccessModal } from '@/components/PaymentSuccessModal'
 import { useQueueWebSocket } from '@/hooks/useQueueWebSocket'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
@@ -27,6 +28,11 @@ export default function QueuePage() {
   const { data: queueData } = useSuspenseQuery({
     queryKey: ['queueStatus', id],
     queryFn: () => queueApi.getQueueStatus(id),
+  })
+
+  const { data: eventData } = useSuspenseQuery({
+    queryKey: ['event', id],
+    queryFn: () => eventsApi.getEventById(id),
   })
 
   const getInitialStep = (): QueueStep => {
@@ -265,6 +271,7 @@ export default function QueuePage() {
   const currentWaitingAhead = waitingAhead ?? queueData.data.waitingAhead ?? 0
   const currentEstimatedTime = estimatedWaitTime ?? queueData.data.estimatedWaitTime ?? 0
   const currentProgress = progress != null ? progress : queueData.data.progress ?? 0
+  const eventTitle = eventData.data.title
 
   return (
     <div className="min-h-screen">
@@ -293,6 +300,7 @@ export default function QueuePage() {
         {step === 'purchase' && (
           <PurchaseStep
             eventId={id}
+            eventTitle={eventTitle}
             selectedSeats={selectedSeats}
             setSelectedSeats={setSelectedSeats}
             selectedSection={selectedSection}
@@ -307,6 +315,7 @@ export default function QueuePage() {
           useTossPayments && tossOrderData ? (
             <TossPaymentStep
               eventId={id}
+              eventTitle={eventTitle}
               selectedSeats={selectedSeats}
               orderData={tossOrderData}
               onPaymentStart={() => {
@@ -318,6 +327,7 @@ export default function QueuePage() {
           ) : orderData ? (
             <PaymentStep
               eventId={id}
+              eventTitle={eventTitle}
               selectedSeats={selectedSeats}
               orderData={orderData}
               paymentMethod={paymentMethod}

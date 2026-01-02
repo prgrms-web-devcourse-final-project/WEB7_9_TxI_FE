@@ -11,6 +11,7 @@ import type { PurchaseStepProps } from '../types'
 
 export function PurchaseStep({
   eventId,
+  eventTitle,
   selectedSeats,
   setSelectedSeats,
   selectedSection,
@@ -112,7 +113,7 @@ export function PurchaseStep({
     <div className="max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">좌석 선택</h1>
-        <p className="text-gray-600">2025 서울 뮤직 페스티벌</p>
+        <p className="text-gray-600">{eventTitle}</p>
       </div>
 
       <Card className="p-6 mb-6 bg-red-50 border-red-200">
@@ -164,7 +165,7 @@ export function PurchaseStep({
             <div className="space-y-4 mb-6">
               <div>
                 <div className="text-sm text-gray-600 mb-1">이벤트</div>
-                <div className="font-semibold">2025 서울 뮤직 페스티벌</div>
+                <div className="font-semibold">{eventTitle}</div>
               </div>
               <Separator />
 
