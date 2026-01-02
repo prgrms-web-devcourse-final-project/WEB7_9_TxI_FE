@@ -1,4 +1,6 @@
+import { eventsApi } from '@/api/events'
 import { ticketsApi } from '@/api/tickets'
+import { QrCodeSection } from '@/components/QrCodeSection'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import {
@@ -25,7 +27,13 @@ export function MyTicketDetailModal({ open, onOpenChange, ticketId }: MyTicketDe
     queryFn: () => ticketsApi.getMyTicketDetail(ticketId),
   })
 
+  const { data: eventData } = useSuspenseQuery({
+    queryKey: ['event', String(data.data.eventId)],
+    queryFn: () => eventsApi.getEventById(String(data.data.eventId)),
+  })
+
   const ticket = data.data
+  const event = eventData.data
 
   const issuedDateTime = formatDateTime(ticket.issuedAt)
   const usedDateTime = ticket.usedAt ? formatDateTime(ticket.usedAt) : null
@@ -93,10 +101,8 @@ export function MyTicketDetailModal({ open, onOpenChange, ticketId }: MyTicketDe
             </Link>
           </Button>
 
-          {ticket.ticketStatus === 'ISSUED' && (
-            <Button variant="outline" className="w-full">
-              QR 코드 보기
-            </Button>
+          {ticket.ticketStatus === 'ISSUED' && event && (
+            <QrCodeSection ticketId={ticket.ticketId} eventDate={event.eventDate} />
           )}
         </div>
       </DialogContent>

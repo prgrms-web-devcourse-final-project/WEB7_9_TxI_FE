@@ -13,3 +13,22 @@ export interface Ticket {
   issuedAt: string
   usedAt: string | null
 }
+
+export interface QrTokenResponse {
+  qrToken: string
+  expirationSecond: number
+  refreshIntervalSecond: number
+  qrUrl: string
+}
+
+export interface QrValidationResponse {
+  isValid: boolean
+  message: string
+  ticketId: number
+  eventId: number
+  eventTitle: string
+  seatCode: string | null
+  ownerNickname: string
+  eventDate: string
+  qrIssuedAt: string
+}
