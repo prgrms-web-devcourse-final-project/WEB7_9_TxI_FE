@@ -3,7 +3,7 @@ export interface User {
   email: string
   fullName: string
   nickname: string
-  role: string
+  role: UserRole
   birthDate: string
   signupDate: string
 }
@@ -15,3 +15,5 @@ export interface UpdateUserRequest {
   month: string
   day: string
 }
+
+export type UserRole = 'NORMAL' | 'ADMIN'

@@ -17,6 +17,8 @@ import { useForm } from '@tanstack/react-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import type { UserRole } from '../types/user'
+import { formatBusinessNumber } from '../utils/format'
 
 interface Props {
   open: boolean
@@ -27,7 +29,7 @@ interface Props {
 export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
   const { setUser, setAccessToken } = useAuthStore()
   const queryClient = useQueryClient()
-  const [accountType, setAccountType] = useState<'user' | 'admin'>('user')
+  const [accountType, setAccountType] = useState<UserRole>('NORMAL')
 
   const signupMutation = useMutation({
     mutationFn: authApi.signup,
@@ -44,7 +46,7 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
       businessNumber: '',
     },
     onSubmit: async ({ value }) => {
-      if (accountType === 'admin' && !value.businessNumber) {
+      if (accountType === 'ADMIN' && !value.businessNumber) {
         toast.error('사업자등록번호를 입력해주세요.')
         return
       }
@@ -56,10 +58,11 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
         password: value.password,
         fullName: value.fullName,
         nickname: value.nickname,
+        role: accountType,
         year,
         month,
         day,
-        ...(accountType === 'admin' && value.businessNumber && { businessNumber: value.businessNumber }),
+        ...(accountType === 'ADMIN' && value.businessNumber && { registrationNumber: value.businessNumber }),
       }
 
       signupMutation.mutate(signupData, {
@@ -79,6 +82,12 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
             toast.success('회원가입이 완료되어 자동 로그인되었습니다.')
             form.reset()
             onOpenChange(false)
+
+            if (accountType === 'ADMIN') {
+              window.location.href = '/admin'
+            } else {
+              window.location.href = '/'
+            }
           } catch {
             toast.error('수동으로 로그인해주세요')
             form.reset()
@@ -96,7 +105,7 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
   // 모달이 열릴 때마다 일반 사용자 탭으로 리셋
   useEffect(() => {
     if (open) {
-      setAccountType('user')
+      setAccountType('NORMAL')
       form.reset()
     }
   }, [open, form])
@@ -108,7 +117,7 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
         <DialogHeader>
           <DialogTitle>회원가입</DialogTitle>
           <DialogDescription>
-            {accountType === 'user'
+            {accountType === 'NORMAL'
               ? 'WaitFair에 가입하여 티켓을 예매하세요'
               : 'WaitFair에 가입하여 이벤트를 공정하고 효율적으로 운영하세요'}
           </DialogDescription>
@@ -118,11 +127,11 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
           <button
             type="button"
             onClick={() => {
-              setAccountType('user')
+              setAccountType('NORMAL')
               form.reset()
             }}
             className={`flex-1 py-3.5 text-center font-semibold transition-all relative ${
-              accountType === 'user'
+              accountType === 'NORMAL'
                 ? 'text-primary bg-white shadow-sm border-b-2 border-primary'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
             }`}
@@ -132,11 +141,11 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
           <button
             type="button"
             onClick={() => {
-              setAccountType('admin')
+              setAccountType('ADMIN')
               form.reset()
             }}
             className={`flex-1 py-3.5 text-center font-semibold transition-all relative ${
-              accountType === 'admin'
+              accountType === 'ADMIN'
                 ? 'text-primary bg-white shadow-sm border-b-2 border-primary'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
             }`}
@@ -295,7 +304,7 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
             )}
           </form.Field>
 
-          {accountType === 'admin' && (
+          {accountType === 'ADMIN' && (
             <form.Field
               name="businessNumber"
               validators={{
@@ -317,7 +326,10 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
                   label="사업자등록번호"
                   placeholder="000-00-00000"
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) => {
+                    const formatted = formatBusinessNumber(e.target.value)
+                    field.handleChange(formatted)
+                  }}
                   onBlur={field.handleBlur}
                   error={field.state.meta.errors.join(', ')}
                   disabled={signupMutation.isPending}

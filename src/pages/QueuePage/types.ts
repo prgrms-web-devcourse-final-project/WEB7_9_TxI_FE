@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
-import type { CreateOrderResponse } from '@/api/order'
+import type { CreateOrderResponse } from '@/types/order'
 
 export type QueueStep = 'waiting' | 'ready' | 'purchase' | 'payment'
 

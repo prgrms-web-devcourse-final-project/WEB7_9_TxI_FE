@@ -11,7 +11,7 @@ import {
 import { Separator } from '@/components/ui/Separator'
 import { CheckCircle2, Ticket } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
-import type { ConfirmPaymentResponse } from '@/api/order'
+import type { ConfirmPaymentResponse } from '@/types/order'
 
 interface PaymentSuccessModalProps {
   open: boolean

@@ -1,4 +1,4 @@
-import type { ConfirmPaymentResponse, CreateOrderResponse } from '@/api/order'
+import type { ConfirmPaymentResponse, CreateOrderResponse, PrepareOrderResponse } from '@/types/order'
 import { orderApi } from '@/api/order'
 import { queueApi } from '@/api/queue'
 import { seatsApi } from '@/api/seats'
@@ -9,6 +9,7 @@ import { useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { PaymentStep } from './components/PaymentStep'
+import { TossPaymentStep } from './components/TossPaymentStep'
 import { PurchaseStep } from './components/PurchaseStep'
 import { QueueHeader } from './components/QueueHeader'
 import { ReadyStep } from './components/ReadyStep'
@@ -64,8 +65,11 @@ export default function QueuePage() {
   const [agreedRefund, setAgreedRefund] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [orderData, setOrderData] = useState<CreateOrderResponse | null>(null)
+  const [tossOrderData, setTossOrderData] = useState<PrepareOrderResponse | null>(null)
   const [paymentResult, setPaymentResult] = useState<ConfirmPaymentResponse | null>(null)
   const [isExitConfirmModalOpen, setIsExitConfirmModalOpen] = useState(false)
+  const [useTossPayments] = useState(true) // 토스페이먼츠 사용 여부 (true: 토스페이먼츠, false: 기존 방식)
+  const [isPaymentInProgress, setIsPaymentInProgress] = useState(false) // 결제 진행 중 플래그
   const [isMovingToBack, setIsMovingToBack] = useState(false)
   const [isProcessingPersonalEvent, setIsProcessingPersonalEvent] = useState(false)
 
@@ -90,6 +94,10 @@ export default function QueuePage() {
     mutationFn: orderApi.createOrder,
   })
 
+  const prepareOrderMutation = useMutation({
+    mutationFn: orderApi.prepareOrder,
+  })
+
   const confirmPaymentMutation = useMutation({
     mutationFn: orderApi.confirmPayment,
   })
@@ -98,8 +106,8 @@ export default function QueuePage() {
     eventId: id,
     enabled: (step === 'ready' || step === 'purchase' || step === 'payment') && !showSuccessModal,
     onExitAttempt: () => setIsExitConfirmModalOpen(true),
+    isPaymentInProgress, // 결제 진행 중이면 move-to-back 호출 안 함
   })
-
 
   useEffect(() => {
     if ((step === 'ready' || step === 'purchase' || step === 'payment') && !isRunning) {
@@ -125,9 +133,9 @@ export default function QueuePage() {
     } else if ('completedAt' in personalEvent) {
       navigate({ to: '/my-tickets' })
     }
-    
+
     clearPersonalEvent()
-    
+
     setTimeout(() => {
       setIsProcessingPersonalEvent(false)
     }, 100)
@@ -178,22 +186,43 @@ export default function QueuePage() {
       return
     }
 
-    createOrderMutation.mutate(
-      {
-        amount: seat.price,
-        eventId: Number(id),
-        seatId: seatId,
-      },
-      {
-        onSuccess: (response) => {
-          setOrderData(response.data)
-          setStep('payment')
+    if (useTossPayments) {
+      // 토스페이먼츠 플로우
+      prepareOrderMutation.mutate(
+        {
+          amount: seat.price,
+          eventId: Number(id),
+          seatId: seatId,
         },
-        onError: (error) => {
-          toast.error(error.message)
+        {
+          onSuccess: (response) => {
+            setTossOrderData(response.data)
+            setStep('payment')
+          },
+          onError: (error) => {
+            toast.error(error.message)
+          },
         },
-      },
-    )
+      )
+    } else {
+      // 기존 플로우
+      createOrderMutation.mutate(
+        {
+          amount: seat.price,
+          eventId: Number(id),
+          seatId: seatId,
+        },
+        {
+          onSuccess: (response) => {
+            setOrderData(response.data)
+            setStep('payment')
+          },
+          onError: (error) => {
+            toast.error(error.message)
+          },
+        },
+      )
+    }
   }
 
   const handlePayment = async () => {
@@ -274,20 +303,33 @@ export default function QueuePage() {
           />
         )}
 
-        {step === 'payment' && orderData && (
-          <PaymentStep
-            eventId={id}
-            selectedSeats={selectedSeats}
-            orderData={orderData}
-            paymentMethod={paymentMethod}
-            setPaymentMethod={setPaymentMethod}
-            agreedTerms={agreedTerms}
-            setAgreedTerms={setAgreedTerms}
-            agreedRefund={agreedRefund}
-            setAgreedRefund={setAgreedRefund}
-            isProcessing={isProcessing}
-            onPayment={handlePayment}
-          />
+        {step === 'payment' && (
+          useTossPayments && tossOrderData ? (
+            <TossPaymentStep
+              eventId={id}
+              selectedSeats={selectedSeats}
+              orderData={tossOrderData}
+              onPaymentStart={() => {
+                // 결제 시작 시 플래그 설정
+                console.log('[QueuePage] 결제 시작 - move-to-back 비활성화')
+                setIsPaymentInProgress(true)
+              }}
+            />
+          ) : orderData ? (
+            <PaymentStep
+              eventId={id}
+              selectedSeats={selectedSeats}
+              orderData={orderData}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              agreedTerms={agreedTerms}
+              setAgreedTerms={setAgreedTerms}
+              agreedRefund={agreedRefund}
+              setAgreedRefund={setAgreedRefund}
+              isProcessing={isProcessing}
+              onPayment={handlePayment}
+            />
+          ) : null
         )}
       </main>
 

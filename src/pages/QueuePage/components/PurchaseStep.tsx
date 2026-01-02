@@ -240,7 +240,7 @@ export function PurchaseStep({
               onClick={onProceed}
               disabled={selectedSeats.length === 0}
             >
-              {selectedSeats.length === 0 ? '좌석을 선택해주세요' : '결제하기'}
+              {selectedSeats.length === 0 ? '좌석을 선택해주세요' : '좌석 선택 완료'}
               {selectedSeats.length > 0 && <ChevronRight className="w-4 h-4 ml-1" />}
             </Button>
           </Card>
