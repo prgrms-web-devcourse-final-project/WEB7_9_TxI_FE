@@ -277,8 +277,9 @@ export default function QrVerificationPage() {
                   className="w-full"
                   size="lg"
                   onClick={() => navigate({ to: '/' })}
+                  disabled
                 >
-                  입장 처리
+                  입장 완료
                 </Button>
               </div>
             )}

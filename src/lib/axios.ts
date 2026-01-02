@@ -15,6 +15,7 @@ const PUBLIC_ENDPOINTS = [
   '/events', // 이벤트 목록 조회
   /^\/events\/\d+$/, // 이벤트 단건 조회 (/events/{id})
   /^\/events\/\d+\/pre-registers\/count$/, // 사전등록 수 조회 (/events/{id}/pre-registers/count)
+  '/tickets/entry/verify', // QR 코드 검증 (입장 처리)
 ]
 
 // URL이 공개 엔드포인트인지 확인

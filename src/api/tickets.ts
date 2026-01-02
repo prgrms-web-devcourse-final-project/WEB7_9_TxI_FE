@@ -41,8 +41,9 @@ export const ticketsApi = {
   },
 
   validateQrCode: async (token: string): Promise<ApiResponse<QrValidationResponse>> => {
-    const response = await apiClient.get<ApiResponse<QrValidationResponse>>(
+    const response = await apiClient.post<ApiResponse<QrValidationResponse>>(
       '/tickets/entry/verify',
+      {},
       {
         params: { token },
       },
