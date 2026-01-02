@@ -57,6 +57,13 @@ export function useQueueExitGuard({
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!handlersRegisteredRef.current) return
+
+      // 결제 진행 중이면 페이지 이탈 방지 안 함
+      if (isPaymentInProgress) {
+        console.log('[QueueExitGuard] 결제 진행 중이므로 beforeunload 스킵')
+        return
+      }
+
       e.preventDefault()
       return ''
     }
