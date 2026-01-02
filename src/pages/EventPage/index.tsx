@@ -55,7 +55,7 @@ export default function EventsPage() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">진행 중인 이벤트</h1>
-            <p className="text-lg text-gray-600">공정한 방식으로 원하는 이벤트에 참여하세요</p>
+            <p className="text-lg text-gray-600">선착순 걱정 없이, 공정하게 예매하세요.</p>
           </div>
         </div>
       </section>

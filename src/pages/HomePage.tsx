@@ -20,7 +20,7 @@ export default function HomePage() {
               <span className="text-blue-600">모두에게 평등한 기회</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-8">
-              사전 등록과 랜덤 큐로 속도 경쟁을 없애고, 강화된 보안으로 암표와 위조를 원천 차단합니다.
+              사전 등록과 랜덤 대기열로 속도 경쟁을 없애고, 강화된 보안으로 암표와 위조를 원천 차단합니다.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/events">

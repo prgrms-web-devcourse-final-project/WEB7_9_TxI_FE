@@ -14,12 +14,12 @@ type DateInfo = {
 } | null
 
 const EVENT_STATUS_MAP: Record<EventStatus, string> = {
-  READY: '준비중',
-  PRE_OPEN: '사전등록',
-  PRE_CLOSED: '사전 등록 마감',
-  QUEUE_READY: '대기',
-  OPEN: '예매중',
-  CLOSED: '마감',
+  READY: '오픈 준비중',
+  PRE_OPEN: '사전등록 진행중',
+  PRE_CLOSED: '사전등록 마감',
+  QUEUE_READY: '대기열 준비 완료',
+  OPEN: '티켓팅 진행중',
+  CLOSED: '티켓팅 마감',
 }
 
 const EVENT_CATEGORY_MAP: Record<EventCategory, string> = {
@@ -29,12 +29,12 @@ const EVENT_CATEGORY_MAP: Record<EventCategory, string> = {
 }
 
 const statusColors: Record<string, string> = {
-  예매중: 'bg-blue-100 text-blue-700 border-blue-300',
-  사전등록: 'bg-green-100 text-green-700 border-green-300',
-  '사전 등록 마감': 'bg-gray-100 text-gray-600 border-gray-300',
-  마감: 'bg-gray-100 text-gray-600 border-gray-300',
-  준비중: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-  대기: 'bg-orange-100 text-orange-700 border-orange-300',
+  '티켓팅 진행중': 'bg-blue-100 text-blue-700 border-blue-300',
+  '사전등록 진행중': 'bg-green-100 text-green-700 border-green-300',
+  '사전등록 마감': 'bg-gray-100 text-gray-600 border-gray-300',
+  '티켓팅 마감': 'bg-gray-100 text-gray-600 border-gray-300',
+  '오픈 준비중': 'bg-yellow-100 text-yellow-700 border-yellow-300',
+  '대기열 준비 완료': 'bg-orange-100 text-orange-700 border-orange-300',
 }
 
 export function EventCard({ event }: { event: Event }) {
