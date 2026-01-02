@@ -12,6 +12,7 @@ import type { PaymentStepProps } from '../types'
 
 export function PaymentStep({
   eventId,
+  eventTitle,
   selectedSeats,
   orderData,
   paymentMethod,
@@ -62,7 +63,7 @@ export function PaymentStep({
             <div className="space-y-4 mb-6">
               <div>
                 <div className="text-sm text-gray-600 mb-1">이벤트</div>
-                <div className="font-semibold">2025 서울 뮤직 페스티벌</div>
+                <div className="font-semibold">{eventTitle}</div>
               </div>
               <Separator />
 

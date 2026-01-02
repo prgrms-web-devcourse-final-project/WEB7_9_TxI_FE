@@ -27,6 +27,7 @@ export interface ReadyStepProps {
 
 export interface PurchaseStepProps {
   eventId: string
+  eventTitle: string
   selectedSeats: number[]
   setSelectedSeats: Dispatch<SetStateAction<number[]>>
   selectedSection: string
@@ -38,6 +39,7 @@ export interface PurchaseStepProps {
 
 export interface PaymentStepProps {
   eventId: string
+  eventTitle: string
   selectedSeats: number[]
   orderData: CreateOrderResponse
   paymentMethod: string
