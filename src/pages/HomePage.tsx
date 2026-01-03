@@ -8,12 +8,32 @@ export default function HomePage() {
   const [isVisible, setIsVisible] = useState(false);
   const [whyAnimated, setWhyAnimated] = useState(false);
   const [howAnimated, setHowAnimated] = useState(false);
+  const [buttonWidth, setButtonWidth] = useState<number | null>(null);
   
   const whySectionRef = useRef<HTMLElement>(null);
   const howSectionRef = useRef<HTMLElement>(null);
+  const firstButtonRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsVisible(true);
+  }, []);
+
+  useEffect(() => {
+    const updateButtonWidth = () => {
+      if (firstButtonRef.current && window.innerWidth < 640) {
+        const width = firstButtonRef.current.offsetWidth;
+        setButtonWidth(width);
+      } else {
+        setButtonWidth(null);
+      }
+    };
+
+    updateButtonWidth();
+    window.addEventListener('resize', updateButtonWidth);
+    
+    return () => {
+      window.removeEventListener('resize', updateButtonWidth);
+    };
   }, []);
 
   const scrollToWhyWaitFair = () => {
@@ -102,39 +122,43 @@ export default function HomePage() {
             <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               사전 등록과 랜덤 대기열로 속도 경쟁을 없애고, 강화된 보안으로 암표와 위조를 <br/> 원천 차단합니다.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <Link to="/events">
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="text-base group border-2 border-gray-300 hover:border-blue-600 bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105"
-                >
-                  <span className="flex items-center gap-2">
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                    이벤트 둘러보기
-                  </span>
-                </Button>
-              </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <div ref={firstButtonRef} className="w-fit">
+                <Link to="/events">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="text-base group border-2 border-gray-300 hover:border-blue-600 bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105"
+                  >
+                    <span className="flex items-center gap-2">
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                      이벤트 둘러보기
+                    </span>
+                  </Button>
+                </Link>
+              </div>
               <Button 
                 size="lg" 
                 variant="outline"
                 onClick={scrollToWhyWaitFair}
-                className="text-base group border-2 border-gray-300 hover:border-blue-600 bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105"
+                className="w-fit sm:w-auto text-base group border-2 border-gray-300 hover:border-blue-600 bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105"
+                style={buttonWidth ? { width: `${buttonWidth}px` } : undefined}
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 justify-center">
                   <Sparkles className="w-4 h-4" />
-                  왜 WaitFair인가?
+                  <span className="truncate">왜 WaitFair인가?</span>
                 </span>
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
                 onClick={scrollToHowItWorks}
-                className="text-base group border-2 border-gray-300 hover:border-blue-600 bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105"
+                className="w-fit sm:w-auto text-base group border-2 border-gray-300 hover:border-blue-600 bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105"
+                style={buttonWidth ? { width: `${buttonWidth}px` } : undefined}
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 justify-center">
                   <PlayCircle className="w-4 h-4" />
-                  이렇게 작동합니다
+                  <span className="truncate">이렇게 작동합니다</span>
                 </span>
               </Button>
             </div>
