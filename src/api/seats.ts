@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
+import type { SeatGrade } from '@/types/seat'
 
 export interface Seat {
   id: number
@@ -22,8 +23,11 @@ export interface SeatSelectResponse {
 }
 
 export const seatsApi = {
-  getSeats: async (eventId: string): Promise<ApiResponse<Seat[]>> => {
-    const response = await apiClient.get<ApiResponse<Seat[]>>(`/events/${eventId}/seats`)
+  getSeats: async (eventId: string, grade?: SeatGrade): Promise<ApiResponse<Seat[]>> => {
+    const params = grade ? { grade } : undefined
+    const response = await apiClient.get<ApiResponse<Seat[]>>(`/events/${eventId}/seats`, {
+      params,
+    })
 
     if (response.data.status === '400 BAD_REQUEST') {
       throw Error(response.data.message)
