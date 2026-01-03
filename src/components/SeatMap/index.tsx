@@ -36,8 +36,9 @@ export function SeatMap({
     })
   })
 
-  const handleSeatClick = (seatId: number, seatStatus: string) => {
-    if (seatStatus !== 'AVAILABLE') return
+  const handleSeatClick = (seatId: number, seatStatus: string, isSelected: boolean) => {
+    // 선택된 좌석은 해제 가능, 그 외에는 AVAILABLE만 선택 가능
+    if (!isSelected && seatStatus !== 'AVAILABLE') return
 
     onSeatClick(seatId)
   }
@@ -64,13 +65,13 @@ export function SeatMap({
               <div className="flex-1 flex justify-center gap-2">
                 {seatsByRow[row].map((seat) => {
                   const { number } = parseSeatCode(seat.seatCode)
-                  const isOccupied = seat.seatStatus !== 'AVAILABLE'
                   const isSelected = selectedSeatIds.includes(seat.id)
+                  const isOccupied = seat.seatStatus !== 'AVAILABLE' && !isSelected
 
                   return (
                     <button
                       key={seat.id}
-                      onClick={() => handleSeatClick(seat.id, seat.seatStatus)}
+                      onClick={() => handleSeatClick(seat.id, seat.seatStatus, isSelected)}
                       disabled={isOccupied}
                       className={cn(
                         'w-8 h-8 rounded-t-lg border-2 text-xs font-semibold transition-all',
@@ -79,9 +80,9 @@ export function SeatMap({
                         !isOccupied &&
                           !isSelected &&
                           'bg-white border-gray-300 hover:border-blue-600 hover:bg-blue-50 cursor-pointer',
-                        isSelected && 'bg-blue-600 border-blue-600 text-white scale-110',
+                        isSelected && 'bg-blue-600 border-blue-600 text-white scale-110 cursor-pointer',
                       )}
-                      title={isOccupied ? '선택 불가' : `${number}번`}
+                      title={isSelected ? `${number}번 (클릭하여 해제)` : isOccupied ? '선택 불가' : `${number}번`}
                     >
                       {number}
                     </button>

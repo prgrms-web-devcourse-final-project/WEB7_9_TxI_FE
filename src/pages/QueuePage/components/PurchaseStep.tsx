@@ -4,10 +4,15 @@ import { Separator } from '@/components/ui/Separator'
 import { SeatMap } from '@/components/SeatMap'
 import { seatsApi } from '@/api/seats'
 import { useSeatWebSocket, applySeatChanges } from '@/hooks/useSeatWebSocket'
-import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
-import { AlertCircle, ChevronRight, Users } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { AlertCircle, ChevronRight, Loader2, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import type { PurchaseStepProps } from '../types'
+import type { SeatGrade } from '@/types/seat'
+import type { Seat } from '@/api/seats'
+import type { ApiResponse } from '@/types/api'
+
+const SEAT_GRADES: SeatGrade[] = ['VIP', 'R', 'S', 'A']
 
 export function PurchaseStep({
   eventId,
@@ -20,9 +25,15 @@ export function PurchaseStep({
   seconds,
   onProceed,
 }: PurchaseStepProps) {
-  const { data: seatsData } = useSuspenseQuery({
-    queryKey: ['seats', eventId],
-    queryFn: () => seatsApi.getSeats(eventId),
+  const queryClient = useQueryClient()
+
+  const { data: seatsData, isLoading } = useQuery({
+    queryKey: ['seats', eventId, selectedSection],
+    queryFn: () => seatsApi.getSeats(eventId, selectedSection as SeatGrade),
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   })
 
   const { seatChanges } = useSeatWebSocket({
@@ -30,10 +41,22 @@ export function PurchaseStep({
     enabled: true,
   })
 
-  const seats = seatsData.data
+  const seats = seatsData?.data || []
   const updatedSeats = applySeatChanges(seats, seatChanges)
 
-  const grades = Array.from(new Set(updatedSeats.map((seat) => seat.grade)))
+  const getAllCachedSeats = (): Seat[] => {
+    const allSeats: Seat[] = []
+    for (const grade of SEAT_GRADES) {
+      const cachedData = queryClient.getQueryData<ApiResponse<Seat[]>>(['seats', eventId, grade])
+      if (cachedData?.data) {
+        const gradeSeats = applySeatChanges(cachedData.data, seatChanges)
+        allSeats.push(...gradeSeats)
+      }
+    }
+    return allSeats
+  }
+
+  const grades = SEAT_GRADES
 
   const selectSeatMutation = useMutation({
     mutationFn: ({ seatId }: { seatId: string }) => seatsApi.selectSeat(eventId, seatId),
@@ -45,9 +68,10 @@ export function PurchaseStep({
 
   const handleSeatClick = (seatId: number) => {
     const seat = updatedSeats.find((s) => s.id === seatId)
-    if (!seat || seat.seatStatus !== 'AVAILABLE') return
-
     const isSelected = selectedSeats.includes(seatId)
+
+    // 선택된 좌석은 해제 가능, 그 외에는 AVAILABLE만 선택 가능
+    if (!seat || (!isSelected && seat.seatStatus !== 'AVAILABLE')) return
 
     if (isSelected) {
       deselectSeatMutation.mutate(
@@ -62,34 +86,6 @@ export function PurchaseStep({
         },
       )
     } else {
-      if (selectedSeats.length >= 1) {
-        const previousSeatId = selectedSeats[0]
-        deselectSeatMutation.mutate(
-          { seatId: String(previousSeatId) },
-          {
-            onSuccess: () => {
-              setSelectedSeats([])
-
-              selectSeatMutation.mutate(
-                { seatId: String(seatId) },
-                {
-                  onSuccess: () => {
-                    setSelectedSeats([seatId])
-                  },
-                  onError: (error) => {
-                    toast.error(error.message)
-                  },
-                },
-              )
-            },
-            onError: (error) => {
-              toast.error(error.message)
-            },
-          },
-        )
-        return
-      }
-
       selectSeatMutation.mutate(
         { seatId: String(seatId) },
         {
@@ -104,8 +100,9 @@ export function PurchaseStep({
     }
   }
 
+  const allCachedSeats = getAllCachedSeats()
   const totalPrice = selectedSeats.reduce((sum, seatId) => {
-    const seat = updatedSeats.find((s) => s.id === seatId)
+    const seat = allCachedSeats.find((s) => s.id === seatId)
     return sum + (seat?.price || 0)
   }, 0)
 
@@ -150,12 +147,21 @@ export function PurchaseStep({
             </div>
           </Card>
 
-          <SeatMap
-            seats={updatedSeats}
-            selectedGrade={selectedSection}
-            selectedSeatIds={selectedSeats}
-            onSeatClick={handleSeatClick}
-          />
+          {isLoading ? (
+            <Card className="p-6">
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <span className="ml-2 text-gray-600">좌석 정보를 불러오는 중...</span>
+              </div>
+            </Card>
+          ) : (
+            <SeatMap
+              seats={updatedSeats}
+              selectedGrade={selectedSection}
+              selectedSeatIds={selectedSeats}
+              onSeatClick={handleSeatClick}
+            />
+          )}
         </div>
 
         <div className="lg:col-span-1">
@@ -174,7 +180,7 @@ export function PurchaseStep({
                 {selectedSeats.length > 0 ? (
                   <div className="space-y-2">
                     {selectedSeats.map((seatId) => {
-                      const seat = updatedSeats.find((s) => s.id === seatId)
+                      const seat = allCachedSeats.find((s) => s.id === seatId)
                       if (!seat) return null
 
                       return (

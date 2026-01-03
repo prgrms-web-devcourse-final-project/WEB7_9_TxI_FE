@@ -1,4 +1,5 @@
 export type SeatStatus = 'AVAILABLE' | 'SOLD' | 'RESERVED'
+export type SeatGrade = 'VIP' | 'R' | 'S' | 'A'
 
 export interface Seat {
   id: number
