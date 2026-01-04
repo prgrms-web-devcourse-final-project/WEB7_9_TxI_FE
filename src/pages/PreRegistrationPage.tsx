@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { eventsApi } from '@/api/events'
 import { smsApi } from '@/api/sms'
 import { useQueryClient } from '@tanstack/react-query'
+import { getVisitorId } from '@/utils/fingerprint'
 
 export default function PreRegistrationPage() {
   const navigate = useNavigate()
@@ -32,6 +33,22 @@ export default function PreRegistrationPage() {
   const [showVerificationInput, setShowVerificationInput] = useState(false)
   const [timeLeft, setTimeLeft] = useState<number>(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [visitorId, setVisitorId] = useState<string | null>(null)
+
+  // FingerprintJS visitorId 초기화
+  useEffect(() => {
+    const initVisitorId = async () => {
+      try {
+        const id = await getVisitorId()
+        setVisitorId(id)
+        console.log('[Fingerprint] visitorId 생성 완료:', id)
+      } catch (error) {
+        console.error('[Fingerprint] visitorId 생성 실패:', error)
+      }
+    }
+
+    initVisitorId()
+  }, [])
 
   // 타이머 정리 함수
   useEffect(() => {
@@ -159,14 +176,21 @@ export default function PreRegistrationPage() {
 
     try {
       console.log('reCAPTCHA 토큰 발급 중...')
+      console.log('[Fingerprint] visitorId:', visitorId)
 
-      const response = await eventsApi.createPreRegister(id, {
-        fullName: formData.fullname,
-        phoneNumber: formData.phoneNumber,
-        birthDate: formData.birthDate,
-        agreeTerms: formData.agreeTerms,
-        agreePrivacy: formData.agreePrivacy,
-      })
+      const response = await eventsApi.createPreRegister(
+        id,
+        {
+          fullName: formData.fullname,
+          phoneNumber: formData.phoneNumber,
+          birthDate: formData.birthDate,
+          agreeTerms: formData.agreeTerms,
+          agreePrivacy: formData.agreePrivacy,
+        },
+        {
+          visitorId: visitorId || undefined,
+        }
+      )
 
       console.log('사전등록 성공:', response)
 

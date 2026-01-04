@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/axios'
 import type { ApiResponse } from '@/types/api'
+import { getVisitorId } from '@/utils/fingerprint'
 
 export interface SmsSendRequest {
   phoneNumber: string
@@ -23,20 +24,45 @@ export const smsApi = {
    * SMS 인증번호 발송
    */
   sendVerificationCode: async (phoneNumber: string): Promise<ApiResponse<SmsSendResponse>> => {
-    const response = await apiClient.post<ApiResponse<SmsSendResponse>>('/sms/send', {
-      phoneNumber,
-    })
+    // Fingerprint visitorId 가져오기
+    const visitorId = await getVisitorId()
+
+    const response = await apiClient.post<ApiResponse<SmsSendResponse>>(
+      '/sms/send',
+      {
+        phoneNumber,
+      },
+      {
+        headers: {
+          'X-Device-Id': visitorId,
+        },
+      }
+    )
     return response.data
   },
 
   /**
    * SMS 인증번호 검증
    */
-  verifyCode: async (phoneNumber: string, verificationCode: string): Promise<ApiResponse<SmsVerifyResponse>> => {
-    const response = await apiClient.post<ApiResponse<SmsVerifyResponse>>('/sms/verify', {
-      phoneNumber,
-      verificationCode,
-    })
+  verifyCode: async (
+    phoneNumber: string,
+    verificationCode: string
+  ): Promise<ApiResponse<SmsVerifyResponse>> => {
+    // Fingerprint visitorId 가져오기
+    const visitorId = await getVisitorId()
+
+    const response = await apiClient.post<ApiResponse<SmsVerifyResponse>>(
+      '/sms/verify',
+      {
+        phoneNumber,
+        verificationCode,
+      },
+      {
+        headers: {
+          'X-Device-Id': visitorId,
+        },
+      }
+    )
     return response.data
   },
 }

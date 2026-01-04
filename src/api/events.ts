@@ -12,6 +12,10 @@ export interface PreRegisterCreateRequest {
   agreePrivacy: boolean
 }
 
+export interface PreRegisterOptions {
+  visitorId?: string
+}
+
 export const eventsApi = {
   getEvents: async (params: GetEventsParams): Promise<ApiResponse<PageResponse<Event>>> => {
     const queryParams = new URLSearchParams()
@@ -93,17 +97,26 @@ export const eventsApi = {
   createPreRegister: async (
     eventId: string,
     data: PreRegisterCreateRequest,
+    options?: PreRegisterOptions,
   ): Promise<ApiResponse<PreRegister>> => {
     // reCAPTCHA v3 토큰 발급
     const recaptchaToken = await getReCaptchaToken('pre_register')
+
+    // 헤더 구성
+    const headers: Record<string, string> = {
+      'X-Recaptcha-Token': recaptchaToken,
+    }
+
+    // FingerprintJS visitorId가 있으면 헤더에 추가
+    if (options?.visitorId) {
+      headers['X-Device-Id'] = options.visitorId
+    }
 
     const response = await apiClient.post<ApiResponse<PreRegister>>(
       `/events/${eventId}/pre-registers`,
       data, // 이름, 휴대폰 번호, 생년월일, 약관 동의 정보 전송
       {
-        headers: {
-          'X-Recaptcha-Token': recaptchaToken,
-        },
+        headers,
       },
     )
 
