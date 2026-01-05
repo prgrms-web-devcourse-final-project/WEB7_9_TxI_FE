@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { MyTicketDetailModal } from '@/components/MyTicketDetailModal'
+import { TransferTicketModal } from '@/components/TransferTicketModal'
 import { formatDateTime } from '@/utils/format'
 import { getTicketStatusBadgeClass } from '@/utils/getTicketStatusBadgeClass'
 import { getTicketStatusText } from '@/utils/getTicketStatusText'
@@ -18,11 +19,16 @@ import {
   MapPin,
   Ticket as TicketIcon,
   BadgeDollarSignIcon,
+  Send,
 } from 'lucide-react'
 
 export default function MyTicketsPage() {
   const navigate = useNavigate()
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
+  const [transferTicket, setTransferTicket] = useState<{
+    ticketId: number
+    eventTitle: string
+  } | null>(null)
 
   const { data: preRegistersData } = useSuspenseQuery({
     queryKey: ['myPreRegisters'],
@@ -151,6 +157,21 @@ export default function MyTicketsPage() {
                           티켓 상세보기
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
+                        {ticket.ticketStatus === 'ISSUED' && (
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() =>
+                              setTransferTicket({
+                                ticketId: ticket.ticketId,
+                                eventTitle: ticket.eventTitle,
+                              })
+                            }
+                          >
+                            양도하기
+                            <Send className="w-4 h-4 ml-2" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </Card>
@@ -166,6 +187,15 @@ export default function MyTicketsPage() {
           open={!!selectedTicketId}
           onOpenChange={(open) => !open && setSelectedTicketId(null)}
           ticketId={selectedTicketId}
+        />
+      )}
+
+      {transferTicket && (
+        <TransferTicketModal
+          open={!!transferTicket}
+          onOpenChange={(open) => !open && setTransferTicket(null)}
+          ticketId={transferTicket.ticketId}
+          eventTitle={transferTicket.eventTitle}
         />
       )}
     </div>
