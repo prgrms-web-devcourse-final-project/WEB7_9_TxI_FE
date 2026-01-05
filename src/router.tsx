@@ -16,6 +16,7 @@ import { Route as adminSeatsRoute } from "./routes/admin/seats.$eventId";
 import { Route as adminEventRoute } from "./routes/admin/events.$eventId";
 import { Route as adminEventEditRoute } from "./routes/admin/events.$eventId.edit";
 import { Route as adminEventNewRoute } from "./routes/admin/events.new";
+import { Route as oauthCallbackRoute } from "./routes/oauth-callback";
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -34,6 +35,7 @@ const routeTree = rootRoute.addChildren([
   adminEventRoute,
   adminEventEditRoute,
   adminEventNewRoute,
+  oauthCallbackRoute,
 ]);
 
 export const router = createRouter({ routeTree });

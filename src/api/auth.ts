@@ -47,4 +47,14 @@ export const authApi = {
     }
     return response.data
   },
+
+  exchangeOAuthCode: async (data: { code: string }): Promise<ApiResponse<AuthData>> => {
+    const response = await apiClient.post<ApiResponse<AuthData>>('/auth/oauth/exchange', data)
+
+    if (response.data.status === '400 BAD_REQUEST' || response.data.status === '500 INTERNAL_SERVER_ERROR') {
+      throw new Error(response.data.message)
+    }
+
+    return response.data
+  }
 }

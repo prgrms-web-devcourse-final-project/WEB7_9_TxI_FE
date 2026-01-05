@@ -19,6 +19,11 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { UserRole } from '../types/user'
 import { formatBusinessNumber } from '../utils/format'
+import kakaoBtnImg from '../../assets/kakao_login_medium_narrow.png'
+
+const kakaoAuthUrl =
+  (import.meta.env.VITE_KAKAO_AUTH_URL ?? 'http://localhost:8080/oauth2/authorization/kakao')
+  + `?redirectUrl=${encodeURIComponent(window.location.origin + '/oauth/callback')}`
 
 interface Props {
   open: boolean
@@ -109,6 +114,10 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
       form.reset()
     }
   }, [open, form])
+
+  const handleKakaoSignup = () => {
+    window.location.href = kakaoAuthUrl
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -361,6 +370,31 @@ export function SignupModal({ open, onOpenChange, onOpenLoginChange }: Props) {
             </form.Subscribe>
           </div>
         </form>
+
+        {
+          accountType === 'NORMAL' && (
+            <>
+              <div className="mt-8 flex items-center gap-4">
+                <div className="flex-1 h-px bg-gray-300" />
+                <span className="text-sm text-gray-500 whitespace-nowrap">
+                  또는
+                </span>
+                <div className="flex-1 h-px bg-gray-300" />
+              </div>
+              <button
+                type="button"
+                onClick={handleKakaoSignup}
+                className="mt-6 w-full rounded-2xl overflow-hidden"
+              >
+                <img
+                  src={kakaoBtnImg}
+                  alt="카카오 로그인"
+                  className="w-full h-[48px] object-contain"
+                />
+              </button>
+            </>
+          )
+        }
 
         <div className="mt-4 text-center text-sm text-gray-600">
           이미 계정이 있으신가요?
