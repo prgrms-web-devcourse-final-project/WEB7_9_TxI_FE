@@ -66,7 +66,7 @@ export const ticketsApi = {
     targetNickname: string,
   ): Promise<ApiResponse<void>> => {
     const response = await apiClient.post<ApiResponse<void>>(
-      `/tickets/${ticketId}/transfer`,
+      `/tickets/my/${ticketId}/transfer`,
       { targetNickname },
     )
 
