@@ -60,4 +60,25 @@ export const ticketsApi = {
 
     return response.data
   },
+
+  transferTicket: async (
+    ticketId: number,
+    targetNickname: string,
+  ): Promise<ApiResponse<void>> => {
+    const response = await apiClient.post<ApiResponse<void>>(
+      `/tickets/${ticketId}/transfer`,
+      { targetNickname },
+    )
+
+    if (
+      response.data.status === '400 BAD_REQUEST' ||
+      response.data.status === '401 UNAUTHORIZED' ||
+      response.data.status === '404 NOT_FOUND' ||
+      response.data.status === '500 INTERNAL_SERVER_ERROR'
+    ) {
+      throw Error(response.data.message)
+    }
+
+    return response.data
+  },
 }
