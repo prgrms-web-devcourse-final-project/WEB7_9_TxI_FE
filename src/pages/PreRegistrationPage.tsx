@@ -101,7 +101,7 @@ export default function PreRegistrationPage() {
     setIsSendingSms(true)
 
     try {
-      const response = await smsApi.sendVerificationCode(formData.phoneNumber)
+      const response = await smsApi.sendVerificationCode(formData.phoneNumber, Number(id))
       toast.success('인증번호가 발송되었습니다.')
       setShowVerificationInput(true)
 
@@ -127,7 +127,7 @@ export default function PreRegistrationPage() {
     setIsVerifying(true)
 
     try {
-      await smsApi.verifyCode(formData.phoneNumber, formData.verificationCode)
+      await smsApi.verifyCode(formData.phoneNumber, formData.verificationCode, Number(id))
       toast.success('본인 인증이 완료되었습니다.')
       setIsVerified(true)
 
