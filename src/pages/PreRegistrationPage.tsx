@@ -198,6 +198,7 @@ export default function PreRegistrationPage() {
 
       queryClient.invalidateQueries({ queryKey: ['event', id, 'pre-register-status'] })
       queryClient.invalidateQueries({ queryKey: ['event', id, 'pre-register-count'] })
+      queryClient.invalidateQueries({ queryKey: ['myPreRegisters'] })
 
       toast.success('사전등록 완료! 티켓팅 시작일에 대기열에 입장하실 수 있습니다.')
 

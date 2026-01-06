@@ -43,6 +43,11 @@ export default function MyTicketsPage() {
   const preRegisters = preRegistersData.data
   const tickets = ticketsData.data
 
+  // CANCELED 상태가 아닌 사전등록만 필터링
+  const activePreRegisters = preRegisters.filter(
+    (preRegister) => preRegister.status !== 'CANCELED'
+  )
+
   return (
     <div className="min-h-screen">
       <main className="container mx-auto px-4 py-12">
@@ -55,14 +60,14 @@ export default function MyTicketsPage() {
           </TabsList>
 
           <TabsContent value="preRegister">
-            {preRegisters.length === 0 ? (
+            {activePreRegisters.length === 0 ? (
               <div className="text-center py-12 text-gray-600">
                 <TicketIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>사전등록 내역이 없습니다</p>
               </div>
             ) : (
               <div className="grid lg:grid-cols-2 gap-6">
-                {preRegisters.map((preRegister) => (
+                {activePreRegisters.map((preRegister) => (
                   <Card
                     key={preRegister.id}
                     className="overflow-hidden cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg"
