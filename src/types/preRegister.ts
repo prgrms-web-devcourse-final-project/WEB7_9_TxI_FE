@@ -1,4 +1,4 @@
-export type PreRegisterStatus = 'REGISTERED' | 'CANCELLED'
+export type PreRegisterStatus = 'REGISTERED' | 'CANCELED'
 
 export interface PreRegister {
   id: number

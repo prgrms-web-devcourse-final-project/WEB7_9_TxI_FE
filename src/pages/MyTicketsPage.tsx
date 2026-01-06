@@ -41,7 +41,7 @@ export default function MyTicketsPage() {
   })
 
   const preRegisters = preRegistersData.data.filter(
-    (preRegister) => preRegister.status !== 'CANCELLED',
+    (preRegister) => preRegister.status !== 'CANCELED',
   )
   const tickets = ticketsData.data
 
