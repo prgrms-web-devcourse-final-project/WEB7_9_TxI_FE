@@ -138,7 +138,6 @@ export function TossPaymentStep({
               <div>
                 <div className="text-sm text-gray-600 mb-1">주문 정보</div>
                 <div className="text-xs bg-gray-50 p-2 rounded">
-                  <div>주문 ID: {orderData.orderId}</div>
                   <div>주문명: {orderData.orderName}</div>
                 </div>
               </div>
