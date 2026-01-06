@@ -27,16 +27,19 @@ export function useQueueExitGuard({
   const isNavigatingRef = useRef(false)
   const handlersRegisteredRef = useRef(false)
   const handlePopStateRef = useRef<((e: PopStateEvent) => void) | null>(null)
+  const handlersRef = useRef<{
+    beforeunload: ((e: BeforeUnloadEvent) => void) | null
+    pagehide: ((e: PageTransitionEvent) => void) | null
+    popstate: (() => void) | null
+    click: ((e: MouseEvent) => void) | null
+  }>({
+    beforeunload: null,
+    pagehide: null,
+    popstate: null,
+    click: null,
+  })
 
   useEffect(() => {
-    if (!enabled) {
-      handlersRegisteredRef.current = false
-      return
-    }
-
-    if (handlersRegisteredRef.current) return
-    handlersRegisteredRef.current = true
-
     const callMoveToBackApi = () => {
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://api.waitfair.shop/api/v1'
       const url = `${baseURL}/queues/${eventId}/move-to-back`
@@ -55,8 +58,29 @@ export function useQueueExitGuard({
       })
     }
 
+    const removeListeners = () => {
+      if (handlersRef.current.beforeunload) {
+        window.removeEventListener('beforeunload', handlersRef.current.beforeunload)
+        handlersRef.current.beforeunload = null
+      }
+      if (handlersRef.current.pagehide) {
+        window.removeEventListener('pagehide', handlersRef.current.pagehide)
+        handlersRef.current.pagehide = null
+      }
+      if (handlersRef.current.popstate) {
+        window.removeEventListener('popstate', handlersRef.current.popstate)
+        handlersRef.current.popstate = null
+      }
+      if (handlersRef.current.click) {
+        document.removeEventListener('click', handlersRef.current.click, true)
+        handlersRef.current.click = null
+      }
+      handlePopStateRef.current = null
+      handlersRegisteredRef.current = false
+    }
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!handlersRegisteredRef.current) return
+      if (!enabled || !handlersRegisteredRef.current) return
 
       // 결제 진행 중이면 페이지 이탈 방지 안 함
       if (isPaymentInProgress) {
@@ -69,7 +93,7 @@ export function useQueueExitGuard({
     }
 
     const handlePageHide = (e: PageTransitionEvent) => {
-      if (!handlersRegisteredRef.current) return
+      if (!enabled || !handlersRegisteredRef.current) return
 
       // 결제 진행 중이면 move-to-back 호출 안 함
       if (isPaymentInProgress) {
@@ -83,17 +107,15 @@ export function useQueueExitGuard({
     }
 
     const handlePopState = () => {
-      if (!handlersRegisteredRef.current || isNavigatingRef.current) return
+      if (!enabled || !handlersRegisteredRef.current || isNavigatingRef.current) return
 
       pendingNavigationRef.current = 'back'
       onExitAttempt()
       window.history.pushState(null, '', window.location.pathname)
     }
 
-    handlePopStateRef.current = handlePopState
-
     const handleClick = (e: MouseEvent) => {
-      if (!handlersRegisteredRef.current || isNavigatingRef.current) return
+      if (!enabled || !handlersRegisteredRef.current || isNavigatingRef.current) return
 
       const target = e.target as HTMLElement
       const link = target.closest('a')
@@ -113,6 +135,22 @@ export function useQueueExitGuard({
       }
     }
 
+    // enabled가 false일 때는 리스너 제거
+    if (!enabled) {
+      removeListeners()
+      return
+    }
+
+    // enabled가 true이고 아직 등록되지 않았을 때만 등록
+    if (handlersRegisteredRef.current) return
+
+    handlersRegisteredRef.current = true
+    handlePopStateRef.current = handlePopState
+    handlersRef.current.beforeunload = handleBeforeUnload
+    handlersRef.current.pagehide = handlePageHide
+    handlersRef.current.popstate = handlePopState
+    handlersRef.current.click = handleClick
+
     window.history.pushState(null, '', window.location.pathname)
     window.addEventListener('beforeunload', handleBeforeUnload)
     window.addEventListener('pagehide', handlePageHide)
@@ -120,12 +158,7 @@ export function useQueueExitGuard({
     document.addEventListener('click', handleClick, true)
 
     return () => {
-      handlersRegisteredRef.current = false
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-      window.removeEventListener('popstate', handlePopState)
-      window.removeEventListener('pagehide', handlePageHide)
-      document.removeEventListener('click', handleClick, true)
-      handlePopStateRef.current = null
+      removeListeners()
     }
   }, [enabled, onExitAttempt, eventId, accessToken, isPaymentInProgress])
 

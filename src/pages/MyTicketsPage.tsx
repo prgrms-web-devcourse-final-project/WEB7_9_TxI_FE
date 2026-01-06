@@ -40,7 +40,9 @@ export default function MyTicketsPage() {
     queryFn: () => ticketsApi.getMyTickets(),
   })
 
-  const preRegisters = preRegistersData.data
+  const preRegisters = preRegistersData.data.filter(
+    (preRegister) => preRegister.status !== 'CANCELLED',
+  )
   const tickets = ticketsData.data
 
   return (
