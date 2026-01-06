@@ -127,12 +127,6 @@ export default function PaymentSuccessPage() {
               <h3 className="font-semibold mb-3 text-sm text-blue-900">결제 정보</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">주문 ID:</span>
-                  <span className="font-mono text-xs truncate ml-2" style={{ maxWidth: '200px' }}>
-                    {paymentData.orderId}
-                  </span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-gray-600">결제 금액:</span>
                   <span className="font-semibold text-blue-600">
                     {paymentData.amount.toLocaleString()}원
