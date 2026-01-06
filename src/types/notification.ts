@@ -1,8 +1,9 @@
 export interface NotificationDTO {
   id: number
-  type: 'PAYMENT' | 'QUEUE_ENTRIES' | 'TICKET' | 'PRE_REGISTER' | 'SIGNUP'
+  type: 'PAYMENT' | 'QUEUE' | 'SEAT' | 'EVENT'
+  typeDetail: string
   title: string
-  content: string
+  message: string
   createdAt: string
   isRead: boolean
   readAt: string | null
@@ -20,17 +21,16 @@ export interface Notification {
 export function mapNotificationDTOToNotification(dto: NotificationDTO): Notification {
   const typeMap: Record<string, Notification['type']> = {
     PAYMENT: 'payment',
-    QUEUE_ENTRIES: 'ticketing',
-    TICKET: 'ticketing',
-    PRE_REGISTER: 'registration',
-    SIGNUP: 'info',
+    QUEUE: 'ticketing',
+    SEAT: 'ticketing',
+    EVENT: 'registration',
   }
 
   return {
     id: dto.id.toString(),
     type: typeMap[dto.type] || 'info',
     title: dto.title,
-    message: dto.content,
+    message: dto.message,
     timestamp: dto.createdAt,
     read: dto.isRead,
   }
