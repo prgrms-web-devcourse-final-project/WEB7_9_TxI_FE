@@ -4,11 +4,13 @@ import { getVisitorId } from '@/utils/fingerprint'
 
 export interface SmsSendRequest {
   phoneNumber: string
+  eventId: number
 }
 
 export interface SmsVerifyRequest {
   phoneNumber: string
   verificationCode: string
+  eventId: number
 }
 
 export interface SmsSendResponse {
@@ -23,7 +25,10 @@ export const smsApi = {
   /**
    * SMS 인증번호 발송
    */
-  sendVerificationCode: async (phoneNumber: string): Promise<ApiResponse<SmsSendResponse>> => {
+  sendVerificationCode: async (
+    phoneNumber: string,
+    eventId: number
+  ): Promise<ApiResponse<SmsSendResponse>> => {
     // Fingerprint visitorId 가져오기
     const visitorId = await getVisitorId()
 
@@ -31,6 +36,7 @@ export const smsApi = {
       '/sms/send',
       {
         phoneNumber,
+        eventId,
       },
       {
         headers: {
@@ -46,7 +52,8 @@ export const smsApi = {
    */
   verifyCode: async (
     phoneNumber: string,
-    verificationCode: string
+    verificationCode: string,
+    eventId: number
   ): Promise<ApiResponse<SmsVerifyResponse>> => {
     // Fingerprint visitorId 가져오기
     const visitorId = await getVisitorId()
@@ -56,6 +63,7 @@ export const smsApi = {
       {
         phoneNumber,
         verificationCode,
+        eventId,
       },
       {
         headers: {

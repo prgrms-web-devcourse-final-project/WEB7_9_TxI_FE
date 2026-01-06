@@ -73,6 +73,7 @@ export default function EventDetailPage() {
           toast.success('사전 등록이 취소되었습니다.')
           queryClient.invalidateQueries({ queryKey: ['event', id, 'pre-register-status'] })
           queryClient.invalidateQueries({ queryKey: ['event', id, 'pre-register-count'] })
+          queryClient.invalidateQueries({ queryKey: ['myPreRegisters'] })
         },
         onError: (error) => {
           toast.error(error.message)

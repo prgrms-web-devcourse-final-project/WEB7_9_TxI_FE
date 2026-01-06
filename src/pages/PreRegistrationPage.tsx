@@ -101,7 +101,7 @@ export default function PreRegistrationPage() {
     setIsSendingSms(true)
 
     try {
-      const response = await smsApi.sendVerificationCode(formData.phoneNumber)
+      const response = await smsApi.sendVerificationCode(formData.phoneNumber, Number(id))
       toast.success('인증번호가 발송되었습니다.')
       setShowVerificationInput(true)
 
@@ -127,7 +127,7 @@ export default function PreRegistrationPage() {
     setIsVerifying(true)
 
     try {
-      await smsApi.verifyCode(formData.phoneNumber, formData.verificationCode)
+      await smsApi.verifyCode(formData.phoneNumber, formData.verificationCode, Number(id))
       toast.success('본인 인증이 완료되었습니다.')
       setIsVerified(true)
 
@@ -198,6 +198,7 @@ export default function PreRegistrationPage() {
 
       queryClient.invalidateQueries({ queryKey: ['event', id, 'pre-register-status'] })
       queryClient.invalidateQueries({ queryKey: ['event', id, 'pre-register-count'] })
+      queryClient.invalidateQueries({ queryKey: ['myPreRegisters'] })
 
       toast.success('사전등록 완료! 티켓팅 시작일에 대기열에 입장하실 수 있습니다.')
 
