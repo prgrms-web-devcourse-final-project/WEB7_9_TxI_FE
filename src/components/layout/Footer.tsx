@@ -33,7 +33,7 @@ export function Footer() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 whitespace-nowrap">
                   <span className="font-medium text-gray-900">Backend </span>
-                  @LeeMinwoo155, @gksdud1109, @kimeunkyoungg, @No-366, @thatgirls00
+                  @LeeMinwoo115, @gksdud1109, @kimeunkyoungg, @No-366, @thatgirls00
                 </div>
                 <div className="flex-shrink-0 whitespace-nowrap">
                   <span className="font-medium text-gray-900">Frontend </span>
