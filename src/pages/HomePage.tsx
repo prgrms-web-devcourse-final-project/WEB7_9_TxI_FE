@@ -187,7 +187,7 @@ export default function HomePage() {
             <div className="grid md:grid-cols-3 lg:grid-cols-2 gap-8">
               {[
                 { icon: Users, color: "blue", title: "공정한 티켓팅", description: "사전 등록과 랜덤 대기열로 네트워크 속도나 기기 성능과 관계없이 모두에게 동등한 기회를 제공합니다." },
-                { icon: Shield, color: "purple", title: "암표 원천 차단", description: "Dynamic QR과 소유권 체인으로 외부 거래와 위조를 완벽하게 방지합니다." },
+                { icon: Shield, color: "purple", title: "암표 원천 차단", description: "Dynamic QR과 플랫폼 내 양도 시스템으로 외부 거래와 위조를 완벽하게 방지합니다." },
                 { icon: Lock, color: "blue", title: "봇·매크로 차단", description: "reCAPTCHA과 디바이스 핑거프린팅으로 비정상적인 접근을 실시간 차단합니다." },
                 { icon: Clock, color: "purple", title: "실시간 대기열", description: "WebSocket 기반 실시간 알림으로 내 순번과 예상 대기 시간을 즉시 확인할 수 있습니다." },
                 { icon: TrendingUp, color: "blue", title: "투명한 거래", description: "플랫폼 내 재판매 관리와 거래 이력 추적으로 모든 거래를 투명하게 검증합니다." },
